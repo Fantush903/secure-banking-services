@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <link rel="stylesheet" th:href="@{/css/global.css}"/>
+    <title>Error</title>
+    <meta charset="UTF-8"/>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: #0a0f1e; display: flex; justify-content: center; align-items: center; min-height: 100vh; color: white; text-align: center; }
+        .container { padding: 40px; }
+        .code { font-size: 90px; font-weight: 900; color: #1a237e; line-height: 1; }
+        .icon { font-size: 60px; margin: 10px 0; }
+        h2 { font-size: 24px; font-weight: 700; margin-bottom: 10px; }
+        p { font-size: 14px; opacity: 0.7; margin-bottom: 28px; }
+        .error-detail { background: rgba(255,255,255,0.05); border-radius: 10px; padding: 16px 24px; margin-bottom: 28px; font-size: 13px; color: #aaa; max-width: 500px; word-break: break-word; }
+        .btn-group { display: flex; gap: 12px; justify-content: center; }
+        a { display: inline-block; padding: 12px 28px; background: #1a237e; color: white; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 14px; }
+        a:hover { background: #283593; }
+        a.secondary { background: rgba(255,255,255,0.1); }
+        a.secondary:hover { background: rgba(255,255,255,0.15); }
+    </style>
+</head>
+<body>
+<script th:src="@{/js/global.js}"></script>
+<div class="container">
+    <div class="code" th:text="${status ?: '500'}">500</div>
+    <div class="icon">⚠️</div>
+    <h2 th:text="${error ?: 'Something went wrong'}">Something went wrong</h2>
+    <p>An unexpected error occurred. Please try again.</p>
+    <div class="error-detail" th:if="${message}" th:text="${message}"></div>
+    <div class="btn-group">
+        <a href="/login">← Back to Login</a>
+        <a href="javascript:history.back()" class="secondary">Go Back</a>
+    </div>
+</div>
+</body>
+</html>

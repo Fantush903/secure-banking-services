@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>KYC Update — SecureBank</title>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f2f8; min-height: 100vh; display: flex; }
+        .sidebar { width: 240px; background: #1a237e; min-height: 100vh; display: flex; flex-direction: column; flex-shrink: 0; position: fixed; top: 0; left: 0; height: 100%; }
+        .sidebar-logo { padding: 24px 20px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .sidebar-logo-icon { width: 40px; height: 40px; background: rgba(255,255,255,0.15); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+        .sidebar-logo-text { font-size: 17px; font-weight: 700; color: white; }
+        .sidebar-nav { flex: 1; padding: 16px 0; overflow-y: auto; }
+        .nav-section { padding: 8px 20px 4px; font-size: 10px; font-weight: 700; color: rgba(255,255,255,0.4); text-transform: uppercase; letter-spacing: 1px; }
+        .nav-item { display: flex; align-items: center; gap: 12px; padding: 12px 20px; font-size: 14px; color: rgba(255,255,255,0.75); text-decoration: none; transition: all 0.2s; border-left: 3px solid transparent; }
+        .nav-item:hover { background: rgba(255,255,255,0.08); color: white; }
+        .nav-item.active { background: rgba(255,255,255,0.12); color: white; border-left-color: white; font-weight: 600; }
+        .nav-icon { font-size: 18px; width: 22px; text-align: center; }
+        .sidebar-bottom { padding: 16px 20px; border-top: 1px solid rgba(255,255,255,0.1); }
+        .btn-logout { width: 100%; padding: 10px; background: rgba(229,57,53,0.2); color: #ef9a9a; border: 1px solid rgba(229,57,53,0.3); border-radius: 8px; font-size: 13px; font-weight: 600; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .main { margin-left: 240px; flex: 1; }
+        .topbar { background: white; padding: 0 30px; height: 64px; display: flex; align-items: center; border-bottom: 1px solid #e8e8e8; position: sticky; top: 0; z-index: 50; }
+        .topbar-title { font-size: 18px; font-weight: 700; color: #1a1a2e; }
+        .content { padding: 28px 30px; max-width: 800px; }
+        .kyc-status { background: linear-gradient(135deg, #1a237e, #1565c0); color: white; border-radius: 14px; padding: 24px; margin-bottom: 24px; display: flex; align-items: center; gap: 20px; }
+        .kyc-icon { font-size: 48px; }
+        .kyc-title { font-size: 18px; font-weight: 700; margin-bottom: 4px; }
+        .kyc-sub { font-size: 13px; opacity: 0.8; }
+        .badge-verified { background: #43a047; color: white; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 700; display: inline-block; margin-top: 8px; }
+        .steps-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 14px; margin-bottom: 24px; }
+        .step-card { background: white; border-radius: 12px; padding: 18px; border: 0.5px solid #e8e8e8; text-align: center; }
+        .step-icon { font-size: 28px; margin-bottom: 10px; }
+        .step-title { font-size: 13px; font-weight: 600; color: #1a1a2e; margin-bottom: 4px; }
+        .step-status { font-size: 12px; }
+        .status-done { color: #2e7d32; font-weight: 600; }
+        .status-pending { color: #f57f17; font-weight: 600; }
+        .card { background: white; border-radius: 14px; border: 0.5px solid #e8e8e8; padding: 24px; margin-bottom: 20px; }
+        .card h3 { font-size: 15px; font-weight: 600; color: #1a1a2e; margin-bottom: 18px; }
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+        label { font-size: 12px; font-weight: 600; color: #444; display: block; margin-bottom: 5px; }
+        input, select { width: 100%; padding: 11px 14px; border: 1.5px solid #e0e0e0; border-radius: 8px; font-size: 14px; color: #333; outline: none; background: #fafafa; margin-bottom: 4px; }
+        input:focus, select:focus { border-color: #1a237e; background: #fff; }
+        .input-group { margin-bottom: 12px; }
+        .upload-box { border: 2px dashed #c5cae9; border-radius: 10px; padding: 24px; text-align: center; cursor: pointer; transition: all 0.2s; background: #f8f9ff; }
+        .upload-box:hover { border-color: #1a237e; background: #f0f2ff; }
+        .upload-icon { font-size: 32px; margin-bottom: 8px; }
+        .upload-text { font-size: 13px; color: #666; }
+        .upload-sub { font-size: 11px; color: #aaa; margin-top: 4px; }
+        .btn { padding: 12px 28px; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; background: #1a237e; color: white; margin-top: 8px; }
+        .alert { padding: 10px 14px; border-radius: 8px; font-size: 13px; margin-bottom: 16px; }
+        .alert-success { background: #f1f8e9; border: 1px solid #c5e1a5; color: #2e7d32; }
+        .info-row { display: flex; justify-content: space-between; padding: 11px 0; border-bottom: 1px solid #f8f8f8; font-size: 13px; }
+        .info-row:last-child { border-bottom: none; }
+        .info-key { color: #999; font-weight: 600; font-size: 12px; }
+        @media(max-width:768px) { .sidebar { transform: translateX(-100%); } .main { margin-left: 0; } .steps-grid,.form-grid { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+<div class="sidebar">
+    <div class="sidebar-logo">
+        <div class="sidebar-logo-icon">🏦</div>
+        <span class="sidebar-logo-text">SecureBank</span>
+    </div>
+    <nav class="sidebar-nav">
+        <div class="nav-section">Main Menu</div>
+        <a href="/customer/dashboard" class="nav-item"><span class="nav-icon">📊</span> Dashboard</a>
+        <a href="/customer/transfer" class="nav-item"><span class="nav-icon">💸</span> Fund Transfer</a>
+        <a href="/customer/transactions" class="nav-item"><span class="nav-icon">📋</span> Transactions</a>
+        <a href="/customer/loans" class="nav-item"><span class="nav-icon">🏠</span> Loans</a>
+        <a href="/customer/bills" class="nav-item"><span class="nav-icon">💡</span> Bills</a>
+        <a href="/customer/fd" class="nav-item"><span class="nav-icon">🏦</span> Fixed Deposit</a>
+        <a href="/customer/rd" class="nav-item"><span class="nav-icon">📅</span> Recurring Deposit</a>
+        <div class="nav-section" style="margin-top:8px">Services</div>
+        <a href="/customer/cheque" class="nav-item"><span class="nav-icon">📝</span> Cheque Book</a>
+        <a href="/customer/complaints" class="nav-item"><span class="nav-icon">📣</span> Complaints</a>
+        <div class="nav-section" style="margin-top:8px">Account</div>
+        <a href="/customer/card" class="nav-item"><span class="nav-icon">💳</span> Debit Card</a>
+        <a href="/customer/nominee" class="nav-item"><span class="nav-icon">👥</span> Nominee</a>
+        <a href="/customer/kyc" class="nav-item active"><span class="nav-icon">🪪</span> KYC Update</a>
+        <a href="/customer/profile" class="nav-item"><span class="nav-icon">👤</span> Profile</a>
+        <a href="/customer/help" class="nav-item"><span class="nav-icon">❓</span> Help</a>
+    </nav>
+    <div class="sidebar-bottom">
+        <a href="/logout" class="btn-logout">🚪 Sign Out</a>
+    </div>
+</div>
+<div class="main">
+    <div class="topbar"><span class="topbar-title">🪪 KYC Update</span></div>
+    <div class="content">
+        <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+
+        <!-- KYC Status -->
+        <div class="kyc-status">
+            <div class="kyc-icon">🪪</div>
+            <div>
+                <div class="kyc-title">KYC Status</div>
+                <div class="kyc-sub">Your KYC is verified and up to date</div>
+                <span class="badge-verified">✅ KYC Verified</span>
+            </div>
+        </div>
+
+        <!-- Steps -->
+        <div class="steps-grid">
+            <div class="step-card">
+                <div class="step-icon">🪪</div>
+                <div class="step-title">Aadhaar Verification</div>
+                <div class="step-status status-done">✅ Verified</div>
+            </div>
+            <div class="step-card">
+                <div class="step-icon">🪙</div>
+                <div class="step-title">PAN Verification</div>
+                <div class="step-status status-done">✅ Verified</div>
+            </div>
+            <div class="step-card">
+                <div class="step-icon">🤳</div>
+                <div class="step-title">Photo / Selfie</div>
+                <div class="step-status status-pending">⏳ Update Required</div>
+            </div>
+        </div>
+
+        <!-- Current KYC Info -->
+        <div class="card">
+            <h3>📋 Current KYC Information</h3>
+            <div class="info-row"><span class="info-key">Full Name</span><span th:text="${session.user.name}">—</span></div>
+            <div class="info-row"><span class="info-key">Date of Birth</span><span>—</span></div>
+            <div class="info-row"><span class="info-key">Aadhaar Number</span><span>**** **** 1234</span></div>
+            <div class="info-row"><span class="info-key">PAN Number</span><span>ABCDE****F</span></div>
+            <div class="info-row"><span class="info-key">Address</span><span th:text="${session.user.address ?: 'Not updated'}">—</span></div>
+            <div class="info-row"><span class="info-key">KYC Last Updated</span><span>15 Jan 2026</span></div>
+        </div>
+
+        <!-- Update KYC -->
+        <div class="card">
+            <h3>🔄 Update KYC Documents</h3>
+            <form method="post" action="/customer/update-kyc">
+                <div class="form-grid">
+                    <div class="input-group">
+                        <label>Aadhaar Number</label>
+                        <input type="text" name="aadhaar" placeholder="12-digit Aadhaar" maxlength="12"/>
+                    </div>
+                    <div class="input-group">
+                        <label>PAN Number</label>
+                        <input type="text" name="pan" placeholder="ABCDE1234F" maxlength="10" style="text-transform:uppercase"/>
+                    </div>
+                    <div class="input-group">
+                        <label>Date of Birth</label>
+                        <input type="date" name="dob"/>
+                    </div>
+                    <div class="input-group">
+                        <label>Occupation</label>
+                        <select name="occupation">
+                            <option>Salaried</option>
+                            <option>Self Employed</option>
+                            <option>Student</option>
+                            <option>Business</option>
+                            <option>Retired</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label>Current Address</label>
+                    <input type="text" name="address" placeholder="Full current address" th:value="${session.user.address}"/>
+                </div>
+
+                <!-- Document Upload -->
+                <div style="margin-top:16px">
+                    <label>Upload Aadhaar (Front & Back)</label>
+                    <div class="upload-box" onclick="document.getElementById('aadhaarFile').click()">
+                        <div class="upload-icon">📎</div>
+                        <div class="upload-text">Click to upload Aadhaar document</div>
+                        <div class="upload-sub">JPG, PNG or PDF • Max 2MB</div>
+                        <input type="file" id="aadhaarFile" name="aadhaarFile" accept=".jpg,.png,.pdf" style="display:none"/>
+                    </div>
+                </div>
+                <div style="margin-top:12px">
+                    <label>Upload PAN Card</label>
+                    <div class="upload-box" onclick="document.getElementById('panFile').click()">
+                        <div class="upload-icon">📎</div>
+                        <div class="upload-text">Click to upload PAN card</div>
+                        <div class="upload-sub">JPG, PNG or PDF • Max 2MB</div>
+                        <input type="file" id="panFile" name="panFile" accept=".jpg,.png,.pdf" style="display:none"/>
+                    </div>
+                </div>
+                <button type="submit" class="btn">📤 Submit KYC Update</button>
+            </form>
+        </div>
+    </div>
+</div>
+</body>
+</html>

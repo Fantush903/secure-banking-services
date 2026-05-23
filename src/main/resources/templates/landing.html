@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <link rel="stylesheet" th:href="@{/css/global.css}"/>
+    <title>SecureBank — Modern Online Banking</title>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: #0a0f1e; color: white; overflow-x: hidden; }
+        /* ── Navbar ── */
+        .navbar { position: fixed; top: 0; left: 0; right: 0; z-index: 100; padding: 16px 60px; display: flex; align-items: center; justify-content: space-between; background: rgba(10,15,30,0.9); backdrop-filter: blur(10px); border-bottom: 1px solid rgba(255,255,255,0.06); }
+        .nav-logo { display: flex; align-items: center; gap: 10px; font-size: 20px; font-weight: 800; }
+        .nav-logo-icon { width: 38px; height: 38px; background: #1a237e; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+        .nav-links { display: flex; align-items: center; gap: 28px; }
+        .nav-links a { color: rgba(255,255,255,0.7); text-decoration: none; font-size: 14px; transition: color 0.2s; }
+        .nav-links a:hover { color: white; }
+        .nav-btns { display: flex; gap: 10px; }
+        .btn-outline { padding: 9px 22px; border: 1px solid rgba(255,255,255,0.3); color: white; border-radius: 8px; text-decoration: none; font-size: 13px; font-weight: 600; transition: all 0.2s; }
+        .btn-outline:hover { background: rgba(255,255,255,0.1); }
+        .btn-solid { padding: 9px 22px; background: #1a237e; color: white; border-radius: 8px; text-decoration: none; font-size: 13px; font-weight: 600; transition: background 0.2s; }
+        .btn-solid:hover { background: #283593; }
+        /* ── Hero ── */
+        .hero { min-height: 100vh; display: flex; align-items: center; justify-content: center; text-align: center; padding: 100px 20px 60px; position: relative; overflow: hidden; }
+        .hero-bg { position: absolute; inset: 0; background: radial-gradient(ellipse at 50% 50%, rgba(26,35,126,0.4) 0%, transparent 70%); }
+        .hero-circle1 { position: absolute; width: 600px; height: 600px; background: radial-gradient(circle, rgba(26,35,126,0.3), transparent); border-radius: 50%; top: -100px; left: -100px; }
+        .hero-circle2 { position: absolute; width: 400px; height: 400px; background: radial-gradient(circle, rgba(2,136,209,0.2), transparent); border-radius: 50%; bottom: -50px; right: -50px; }
+        .hero-content { position: relative; z-index: 1; max-width: 800px; }
+        .hero-badge { display: inline-flex; align-items: center; gap: 8px; background: rgba(26,35,126,0.4); border: 1px solid rgba(26,35,126,0.6); padding: 6px 16px; border-radius: 20px; font-size: 12px; color: #90caf9; margin-bottom: 24px; font-weight: 600; }
+        .hero h1 { font-size: 62px; font-weight: 900; line-height: 1.1; margin-bottom: 20px; background: linear-gradient(135deg, #fff 0%, #90caf9 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .hero p { font-size: 18px; color: rgba(255,255,255,0.65); margin-bottom: 36px; line-height: 1.7; max-width: 560px; margin-left: auto; margin-right: auto; }
+        .hero-btns { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; margin-bottom: 48px; }
+        .btn-hero-primary { padding: 16px 36px; background: #1a237e; color: white; border-radius: 10px; text-decoration: none; font-size: 16px; font-weight: 700; transition: all 0.2s; }
+        .btn-hero-primary:hover { background: #283593; transform: translateY(-2px); }
+        .btn-hero-secondary { padding: 16px 36px; border: 1px solid rgba(255,255,255,0.3); color: white; border-radius: 10px; text-decoration: none; font-size: 16px; font-weight: 600; transition: all 0.2s; }
+        .btn-hero-secondary:hover { background: rgba(255,255,255,0.08); }
+        .hero-stats { display: flex; gap: 40px; justify-content: center; flex-wrap: wrap; }
+        .hero-stat { text-align: center; }
+        .hero-stat-value { font-size: 28px; font-weight: 800; color: white; }
+        .hero-stat-label { font-size: 12px; color: rgba(255,255,255,0.5); margin-top: 4px; }
+        /* ── Features ── */
+        .features { padding: 80px 60px; background: #0d1224; }
+        .section-label { font-size: 12px; font-weight: 700; color: #90caf9; text-transform: uppercase; letter-spacing: 2px; text-align: center; margin-bottom: 12px; }
+        .section-title { font-size: 38px; font-weight: 800; text-align: center; margin-bottom: 12px; }
+        .section-sub { font-size: 16px; color: rgba(255,255,255,0.55); text-align: center; margin-bottom: 52px; }
+        .features-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; max-width: 1100px; margin: 0 auto; }
+        .feature-card { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 28px; transition: all 0.2s; }
+        .feature-card:hover { background: rgba(255,255,255,0.07); border-color: rgba(26,35,126,0.6); transform: translateY(-3px); }
+        .feature-icon { width: 52px; height: 52px; border-radius: 14px; background: rgba(26,35,126,0.4); display: flex; align-items: center; justify-content: center; font-size: 24px; margin-bottom: 16px; }
+        .feature-title { font-size: 17px; font-weight: 700; margin-bottom: 8px; }
+        .feature-desc { font-size: 13px; color: rgba(255,255,255,0.55); line-height: 1.6; }
+        /* ── How It Works ── */
+        .how { padding: 80px 60px; background: #0a0f1e; }
+        .steps { display: flex; gap: 0; justify-content: center; align-items: flex-start; max-width: 900px; margin: 0 auto; flex-wrap: wrap; }
+        .step-item { flex: 1; min-width: 200px; text-align: center; padding: 0 20px; position: relative; }
+        .step-item:not(:last-child)::after { content: '→'; position: absolute; right: -12px; top: 24px; font-size: 20px; color: rgba(255,255,255,0.3); }
+        .step-num { width: 52px; height: 52px; background: #1a237e; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 800; margin: 0 auto 14px; }
+        .step-title { font-size: 15px; font-weight: 700; margin-bottom: 6px; }
+        .step-desc { font-size: 12px; color: rgba(255,255,255,0.5); line-height: 1.5; }
+        /* ── Security ── */
+        .security { padding: 80px 60px; background: linear-gradient(135deg, #0d1224, #0a0f1e); }
+        .security-inner { max-width: 1000px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center; }
+        .security-badges { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+        .sec-badge { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 18px; }
+        .sec-badge-icon { font-size: 24px; margin-bottom: 8px; }
+        .sec-badge-title { font-size: 13px; font-weight: 700; margin-bottom: 4px; }
+        .sec-badge-desc { font-size: 11px; color: rgba(255,255,255,0.5); }
+        /* ── CTA ── */
+        .cta { padding: 80px 60px; text-align: center; background: #1a237e; }
+        .cta h2 { font-size: 38px; font-weight: 800; margin-bottom: 12px; }
+        .cta p { font-size: 16px; opacity: 0.8; margin-bottom: 32px; }
+        .cta-btns { display: flex; gap: 14px; justify-content: center; }
+        .btn-cta-white { padding: 14px 32px; background: white; color: #1a237e; border-radius: 10px; text-decoration: none; font-size: 15px; font-weight: 700; }
+        .btn-cta-outline { padding: 14px 32px; border: 2px solid rgba(255,255,255,0.5); color: white; border-radius: 10px; text-decoration: none; font-size: 15px; font-weight: 600; }
+        /* ── Footer ── */
+        .footer { background: #060a14; padding: 40px 60px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; }
+        .footer-logo { font-size: 16px; font-weight: 800; color: white; display: flex; align-items: center; gap: 8px; }
+        .footer-links { display: flex; gap: 24px; }
+        .footer-links a { color: rgba(255,255,255,0.5); text-decoration: none; font-size: 13px; }
+        .footer-copy { font-size: 12px; color: rgba(255,255,255,0.3); }
+        /* ── Responsive ── */
+        @media(max-width:768px) {
+            .navbar { padding: 14px 20px; } .nav-links { display: none; }
+            .hero h1 { font-size: 36px; } .hero-stats { gap: 20px; }
+            .features { padding: 60px 20px; } .features-grid { grid-template-columns: 1fr; }
+            .how { padding: 60px 20px; }
+            .security { padding: 60px 20px; } .security-inner { grid-template-columns: 1fr; gap: 30px; }
+            .cta { padding: 60px 20px; } .footer { padding: 30px 20px; flex-direction: column; text-align: center; }
+        }
+    </style>
+</head>
+<body>
+<script th:src="@{/js/global.js}"></script>
+<!-- Navbar -->
+<nav class="navbar">
+    <div class="nav-logo"><div class="nav-logo-icon">🏦</div> SecureBank</div>
+    <div class="nav-links">
+        <a href="#features">Features</a>
+        <a href="#how">How It Works</a>
+        <a href="#security">Security</a>
+    </div>
+    <div class="nav-btns">
+        <a href="/login" class="btn-outline">Sign In</a>
+        <a href="/register" class="btn-solid">Open Account</a>
+    </div>
+</nav>
+
+<!-- Hero -->
+<section class="hero">
+    <div class="hero-bg"></div>
+    <div class="hero-circle1"></div>
+    <div class="hero-circle2"></div>
+    <div class="hero-content">
+        <div class="hero-badge">🎓 Uttaranchal University — BCA Capstone Project</div>
+        <h1>Banking Made<br/>Simple & Secure</h1>
+        <p>Experience next-generation banking with instant transfers, smart loans, and military-grade security — all in one place.</p>
+        <div class="hero-btns">
+            <a href="/register" class="btn-hero-primary">🚀 Open Free Account</a>
+            <a href="/login" class="btn-hero-secondary">Sign In →</a>
+        </div>
+        <div class="hero-stats">
+            <div class="hero-stat"><div class="hero-stat-value">2FA</div><div class="hero-stat-label">Security</div></div>
+            <div class="hero-stat"><div class="hero-stat-value">₹0</div><div class="hero-stat-label">Opening Fee</div></div>
+            <div class="hero-stat"><div class="hero-stat-value">24/7</div><div class="hero-stat-label">Support</div></div>
+            <div class="hero-stat"><div class="hero-stat-value">BCrypt</div><div class="hero-stat-label">Encryption</div></div>
+        </div>
+    </div>
+</section>
+
+<!-- Features -->
+<section class="features" id="features">
+    <div class="section-label">Features</div>
+    <h2 class="section-title">Everything You Need</h2>
+    <p class="section-sub">A complete banking platform built for the modern era</p>
+    <div class="features-grid">
+        <div class="feature-card"><div class="feature-icon">💸</div><div class="feature-title">Instant Fund Transfer</div><div class="feature-desc">Send money via NEFT, RTGS, or IMPS instantly to any account across India.</div></div>
+        <div class="feature-card"><div class="feature-icon">📱</div><div class="feature-title">Two-Factor Auth</div><div class="feature-desc">Every login is protected with a 6-digit OTP sent to your registered email.</div></div>
+        <div class="feature-card"><div class="feature-icon">🏠</div><div class="feature-title">Smart Loans</div><div class="feature-desc">Apply for Home, Personal, or Education loans with built-in EMI calculator.</div></div>
+        <div class="feature-card"><div class="feature-icon">📊</div><div class="feature-title">Transaction History</div><div class="feature-desc">View, filter, and download your complete transaction history anytime.</div></div>
+        <div class="feature-card"><div class="feature-icon">🔒</div><div class="feature-title">BCrypt Encryption</div><div class="feature-desc">All passwords are encrypted with industry-standard BCrypt hashing algorithm.</div></div>
+        <div class="feature-card"><div class="feature-icon">🛡️</div><div class="feature-title">Fraud Detection</div><div class="feature-desc">Admin monitors all large transactions above ₹1,00,000 for fraud prevention.</div></div>
+        <div class="feature-card"><div class="feature-icon">💡</div><div class="feature-title">Bill Payments</div><div class="feature-desc">Pay electricity, mobile, internet, and other utility bills directly.</div></div>
+        <div class="feature-card"><div class="feature-icon">🏦</div><div class="feature-title">Fixed Deposits</div><div class="feature-desc">Grow your savings with competitive interest rates on Fixed Deposits.</div></div>
+        <div class="feature-card"><div class="feature-icon">📄</div><div class="feature-title">Account Statement</div><div class="feature-desc">Download printable bank statements for any date range in seconds.</div></div>
+    </div>
+</section>
+
+<!-- How It Works -->
+<section class="how" id="how">
+    <div class="section-label">Process</div>
+    <h2 class="section-title">How It Works</h2>
+    <p class="section-sub">Get started in just 4 simple steps</p>
+    <div class="steps">
+        <div class="step-item"><div class="step-num">1</div><div class="step-title">Register</div><div class="step-desc">Create your account with KYC details in under 2 minutes</div></div>
+        <div class="step-item"><div class="step-num">2</div><div class="step-title">Verify OTP</div><div class="step-desc">Confirm your identity with a 6-digit OTP sent to your email</div></div>
+        <div class="step-item"><div class="step-num">3</div><div class="step-title">Login</div><div class="step-desc">Sign in securely with 2FA protection every time</div></div>
+        <div class="step-item"><div class="step-num">4</div><div class="step-title">Bank Freely</div><div class="step-desc">Transfer, apply loans, pay bills and more instantly</div></div>
+    </div>
+</section>
+
+<!-- Security -->
+<section class="security" id="security">
+    <div class="security-inner">
+        <div>
+            <div class="section-label">Security</div>
+            <h2 style="font-size:34px;font-weight:800;margin-bottom:16px;line-height:1.2">Your Money is Safe<br/>With Us</h2>
+            <p style="font-size:15px;color:rgba(255,255,255,0.6);line-height:1.7;margin-bottom:24px">We use multiple layers of security to ensure your account and funds are always protected.</p>
+            <a href="/register" class="btn-solid" style="display:inline-block;padding:14px 28px;font-size:14px">Get Started Securely →</a>
+        </div>
+        <div class="security-badges">
+            <div class="sec-badge"><div class="sec-badge-icon">🔒</div><div class="sec-badge-title">BCrypt Encryption</div><div class="sec-badge-desc">Passwords hashed with industry-standard BCrypt</div></div>
+            <div class="sec-badge"><div class="sec-badge-icon">📱</div><div class="sec-badge-title">2FA OTP</div><div class="sec-badge-desc">6-digit OTP on every login attempt</div></div>
+            <div class="sec-badge"><div class="sec-badge-icon">🛡️</div><div class="sec-badge-title">Account Lock</div><div class="sec-badge-desc">Auto-lock after 3 failed attempts</div></div>
+            <div class="sec-badge"><div class="sec-badge-icon">⏱️</div><div class="sec-badge-title">Session Timeout</div><div class="sec-badge-desc">Auto logout after 30 min inactivity</div></div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA -->
+<section class="cta">
+    <h2>Ready to Get Started?</h2>
+    <p>Join SecureBank today — it's free, fast and fully secure.</p>
+    <div class="cta-btns">
+        <a href="/register" class="btn-cta-white">🚀 Open Account</a>
+        <a href="/login" class="btn-cta-outline">Sign In</a>
+    </div>
+</section>
+
+<!-- Footer -->
+<footer class="footer">
+    <div class="footer-logo">🏦 SecureBank</div>
+    <div class="footer-links">
+        <a href="/login">Login</a>
+        <a href="/register">Register</a>
+        <a href="#features">Features</a>
+        <a href="#security">Security</a>
+    </div>
+    <div class="footer-copy">© 2026 SecureBank — Uttaranchal University BCA Project</div>
+</footer>
+
+</body>
+</html>

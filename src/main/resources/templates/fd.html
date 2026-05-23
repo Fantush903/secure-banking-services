@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <link rel="stylesheet" th:href="@{/css/global.css}"/>
+    <title>Fixed Deposit — SecureBank</title>
+    <meta charset="UTF-8"/>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f2f8; min-height: 100vh; display: flex; }
+        .sidebar { width: 240px; background: #1a237e; min-height: 100vh; display: flex; flex-direction: column; flex-shrink: 0; position: fixed; top: 0; left: 0; height: 100%; }
+        .sidebar-logo { padding: 24px 20px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .sidebar-logo-icon { width: 40px; height: 40px; background: rgba(255,255,255,0.15); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+        .sidebar-logo-text { font-size: 17px; font-weight: 700; color: white; }
+        .sidebar-nav { flex: 1; padding: 16px 0; }
+        .nav-section { padding: 8px 20px 4px; font-size: 10px; font-weight: 700; color: rgba(255,255,255,0.4); text-transform: uppercase; letter-spacing: 1px; }
+        .nav-item { display: flex; align-items: center; gap: 12px; padding: 12px 20px; font-size: 14px; color: rgba(255,255,255,0.75); text-decoration: none; transition: all 0.2s; border-left: 3px solid transparent; }
+        .nav-item:hover { background: rgba(255,255,255,0.08); color: white; }
+        .nav-item.active { background: rgba(255,255,255,0.12); color: white; border-left-color: white; font-weight: 600; }
+        .nav-icon { font-size: 18px; width: 22px; text-align: center; }
+        .sidebar-bottom { padding: 16px 20px; border-top: 1px solid rgba(255,255,255,0.1); }
+        .btn-logout { width: 100%; padding: 10px; background: rgba(229,57,53,0.2); color: #ef9a9a; border: 1px solid rgba(229,57,53,0.3); border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .main { margin-left: 240px; flex: 1; }
+        .topbar { background: white; padding: 0 30px; height: 64px; display: flex; align-items: center; border-bottom: 1px solid #e8e8e8; position: sticky; top: 0; z-index: 50; }
+        .topbar-title { font-size: 18px; font-weight: 700; color: #1a1a2e; }
+        .content { padding: 28px 30px; max-width: 1000px; }
+        .rates-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 28px; }
+        .rate-card { background: white; border-radius: 12px; padding: 18px; border: 0.5px solid #e8e8e8; text-align: center; }
+        .rate-tenure { font-size: 13px; font-weight: 700; color: #1a1a2e; margin-bottom: 6px; }
+        .rate-value { font-size: 26px; font-weight: 800; color: #1a237e; }
+        .rate-label { font-size: 11px; color: #999; margin-top: 4px; }
+        .bottom-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .card { background: white; border-radius: 14px; border: 0.5px solid #e8e8e8; padding: 24px; }
+        .card h3 { font-size: 16px; font-weight: 600; color: #1a1a2e; margin-bottom: 20px; }
+        label { font-size: 12px; font-weight: 600; color: #444; display: block; margin-bottom: 6px; }
+        input, select { width: 100%; padding: 12px 14px; border: 1.5px solid #e0e0e0; border-radius: 8px; font-size: 14px; color: #333; outline: none; background: #fafafa; margin-bottom: 14px; }
+        input:focus, select:focus { border-color: #1a237e; background: #fff; }
+        .fd-calc { background: #f5f6ff; border: 1px solid #e8ecff; border-radius: 12px; padding: 16px; margin: 14px 0; }
+        .calc-row { display: flex; justify-content: space-between; padding: 7px 0; font-size: 13px; border-bottom: 1px solid #e8ecff; }
+        .calc-row:last-child { border-bottom: none; font-weight: 700; font-size: 15px; color: #1a237e; }
+        .btn { width: 100%; padding: 13px; border: none; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer; background: #1a237e; color: white; }
+        .btn:hover { background: #283593; }
+        .alert { padding: 10px 14px; border-radius: 8px; font-size: 13px; margin-bottom: 16px; }
+        .alert-success { background: #f1f8e9; border: 1px solid #c5e1a5; color: #2e7d32; }
+        .empty-state { text-align: center; padding: 40px; color: #ccc; }
+        .badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+        .badge-green { background: #e8f5e9; color: #2e7d32; }
+    </style>
+</head>
+<body>
+<script th:src="@{/js/global.js}"></script>
+<div class="sidebar">
+    <div class="sidebar-logo">
+        <div class="sidebar-logo-icon">🏦</div>
+        <span class="sidebar-logo-text">SecureBank</span>
+    </div>
+    <nav class="sidebar-nav">
+        <div class="nav-section">Main Menu</div>
+        <a href="/customer/dashboard" class="nav-item"><span class="nav-icon">📊</span> Dashboard</a>
+        <a href="/customer/transfer" class="nav-item"><span class="nav-icon">💸</span> Fund Transfer</a>
+        <a href="/customer/transactions" class="nav-item"><span class="nav-icon">📋</span> Transactions</a>
+        <a href="/customer/loans" class="nav-item"><span class="nav-icon">🏠</span> Loans</a>
+        <a href="/customer/bills" class="nav-item"><span class="nav-icon">💡</span> Bill Payments</a>
+        <a href="/customer/fd" class="nav-item active"><span class="nav-icon">🏦</span> Fixed Deposit</a>
+        <div class="nav-section" style="margin-top:8px">Account</div>
+        <a href="/customer/profile" class="nav-item"><span class="nav-icon">👤</span> Profile</a>
+        <a href="/customer/statement" class="nav-item"><span class="nav-icon">📄</span> Statement</a>
+        <a href="/customer/help" class="nav-item"><span class="nav-icon">❓</span> Help</a>
+    </nav>
+    <div class="sidebar-bottom">
+        <a href="/logout" class="btn-logout">🚪 Sign Out</a>
+    </div>
+</div>
+<div class="main">
+    <div class="topbar"><span class="topbar-title">🏦 Fixed Deposit</span>
+        <button class="mobile-menu-btn" onclick="">☰</button>
+        <button class="dark-mode-toggle" onclick="toggleDarkMode()">🌙</button></div>
+    <div class="content">
+        <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+
+        <!-- FD Rates -->
+        <h3 style="font-size:16px;font-weight:700;color:#1a1a2e;margin-bottom:14px">Current FD Interest Rates</h3>
+        <div class="rates-grid">
+            <div class="rate-card"><div class="rate-tenure">7–14 Days</div><div class="rate-value">4.5%</div><div class="rate-label">per annum</div></div>
+            <div class="rate-card"><div class="rate-tenure">3–6 Months</div><div class="rate-value">5.5%</div><div class="rate-label">per annum</div></div>
+            <div class="rate-card"><div class="rate-tenure">6M–1 Year</div><div class="rate-value">6.5%</div><div class="rate-label">per annum</div></div>
+            <div class="rate-card"><div class="rate-tenure">1–5 Years</div><div class="rate-value" style="color:#2e7d32">7.5%</div><div class="rate-label">per annum ⭐ Best</div></div>
+        </div>
+
+        <div class="bottom-grid">
+            <!-- FD Application Form -->
+            <div class="card">
+                <h3>📋 Open New FD</h3>
+                <form method="post" action="/customer/open-fd">
+                    <label>Deposit Amount (₹)</label>
+                    <input type="number" name="amount" id="fdAmount" placeholder="Min ₹1,000" min="1000" required oninput="calcFD()"/>
+                    <label>Tenure</label>
+                    <select name="tenure" id="fdTenure" onchange="calcFD()">
+                        <option value="7">7 Days — 4.5% p.a.</option>
+                        <option value="30">1 Month — 5.0% p.a.</option>
+                        <option value="90">3 Months — 5.5% p.a.</option>
+                        <option value="180">6 Months — 6.0% p.a.</option>
+                        <option value="365">1 Year — 6.5% p.a.</option>
+                        <option value="730" selected>2 Years — 7.0% p.a.</option>
+                        <option value="1825">5 Years — 7.5% p.a.</option>
+                    </select>
+                    <label>Interest Payout</label>
+                    <select name="payout">
+                        <option>On Maturity</option>
+                        <option>Monthly</option>
+                        <option>Quarterly</option>
+                        <option>Annually</option>
+                    </select>
+                    <div class="fd-calc">
+                        <div class="calc-row"><span>Principal Amount</span><span id="fdPrincipal">₹ 0</span></div>
+                        <div class="calc-row"><span>Interest Rate</span><span id="fdRate">7.0% p.a.</span></div>
+                        <div class="calc-row"><span>Interest Earned</span><span id="fdInterest">₹ 0</span></div>
+                        <div class="calc-row"><span>Maturity Amount</span><span id="fdMaturity">₹ 0</span></div>
+                    </div>
+                    <button type="submit" class="btn">🏦 Open Fixed Deposit</button>
+                </form>
+            </div>
+
+            <!-- Active FDs -->
+            <div class="card">
+                <h3>📊 My Fixed Deposits</h3>
+                <div class="empty-state">
+                    <div style="font-size:36px;margin-bottom:10px">🏦</div>
+                    <div>No active FDs yet.<br/>Open your first FD today!</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    const rates = {7:4.5,30:5.0,90:5.5,180:6.0,365:6.5,730:7.0,1825:7.5};
+    function calcFD() {
+        const P = parseFloat(document.getElementById('fdAmount').value) || 0;
+        const days = parseInt(document.getElementById('fdTenure').value) || 730;
+        const r = rates[days] || 7.0;
+        const years = days / 365;
+        const interest = P * r / 100 * years;
+        const maturity = P + interest;
+        document.getElementById('fdPrincipal').textContent = '₹ ' + P.toLocaleString('en-IN', {minimumFractionDigits:2});
+        document.getElementById('fdRate').textContent = r + '% p.a.';
+        document.getElementById('fdInterest').textContent = '₹ ' + interest.toLocaleString('en-IN', {minimumFractionDigits:2});
+        document.getElementById('fdMaturity').textContent = '₹ ' + maturity.toLocaleString('en-IN', {minimumFractionDigits:2});
+    }
+</script>
+</body>
+</html>

@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <link rel="stylesheet" th:href="@{/css/global.css}"/>
+    <title>Transactions</title>
+    <meta charset="UTF-8"/>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f2f8; min-height: 100vh; }
+        .navbar { background: #1a237e; color: white; padding: 0 30px; height: 64px; display: flex; align-items: center; justify-content: space-between; }
+        .nav-left { display: flex; align-items: center; gap: 12px; }
+        .nav-logo { width: 38px; height: 38px; background: rgba(255,255,255,0.15); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+        .nav-title { font-size: 18px; font-weight: 700; }
+        .btn-logout { padding: 8px 18px; background: #e53935; color: white; border: none; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; text-decoration: none; }
+        .tabs { background: white; border-bottom: 1px solid #e0e0e0; padding: 0 30px; display: flex; gap: 4px; }
+        .tab { padding: 16px 20px; font-size: 14px; font-weight: 500; color: #777; text-decoration: none; border-bottom: 2px solid transparent; }
+        .tab:hover { color: #1a237e; }
+        .tab.active { color: #1a237e; border-bottom-color: #1a237e; }
+        .main { padding: 30px; max-width: 1100px; margin: 0 auto; }
+        .page-title { font-size: 22px; font-weight: 700; color: #1a1a2e; margin-bottom: 6px; }
+        .page-sub { font-size: 13px; color: #888; margin-bottom: 24px; }
+        .stat-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 24px; }
+        .stat-card { background: white; border-radius: 12px; padding: 18px 22px; border: 0.5px solid #e8e8e8; }
+        .stat-label { font-size: 12px; color: #999; font-weight: 600; text-transform: uppercase; margin-bottom: 8px; }
+        .stat-value { font-size: 22px; font-weight: 700; color: #1a1a2e; }
+        .filter-bar { background: white; border-radius: 12px; padding: 16px 20px; display: flex; gap: 12px; align-items: center; margin-bottom: 20px; border: 0.5px solid #e8e8e8; flex-wrap: wrap; }
+        .filter-bar input, .filter-bar select { padding: 9px 14px; border: 1.5px solid #e0e0e0; border-radius: 8px; font-size: 13px; outline: none; background: #fafafa; }
+        .filter-bar input:focus, .filter-bar select:focus { border-color: #1a237e; }
+        .btn-filter { padding: 9px 20px; background: #1a237e; color: white; border: none; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; }
+        .card { background: white; border-radius: 12px; border: 0.5px solid #e8e8e8; overflow: hidden; }
+        .card-header { padding: 18px 24px; border-bottom: 1px solid #f0f0f0; display: flex; justify-content: space-between; align-items: center; }
+        .card-header h3 { font-size: 16px; font-weight: 600; color: #1a1a2e; }
+        table { width: 100%; border-collapse: collapse; }
+        th { font-size: 11px; font-weight: 700; color: #999; text-transform: uppercase; letter-spacing: 0.5px; padding: 12px 20px; text-align: left; background: #fafafa; border-bottom: 1px solid #f0f0f0; }
+        td { padding: 14px 20px; font-size: 13px; color: #444; border-bottom: 1px solid #f8f8f8; vertical-align: middle; }
+        tr:last-child td { border-bottom: none; }
+        .badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+        .badge-green { background: #e8f5e9; color: #2e7d32; }
+        .badge-red { background: #ffebee; color: #c62828; }
+        .badge-blue { background: #e3f2fd; color: #1565c0; }
+        .amount-credit { color: #2e7d32; font-weight: 700; }
+        .amount-debit { color: #c62828; font-weight: 700; }
+        .empty-state { text-align: center; padding: 50px; color: #bbb; }
+        .empty-state div:first-child { font-size: 40px; margin-bottom: 12px; }
+    </style>
+</head>
+<body>
+<script th:src="@{/js/global.js}"></script>
+<div class="navbar">
+    <div class="nav-left">
+        <div class="nav-logo">🏦</div>
+        <span class="nav-title">SecureBank</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:14px">
+        <span style="font-size:14px" th:text="${session.user.name}">User</span>
+        <a href="/logout" class="btn-logout">Logout</a>
+    </div>
+</div>
+
+<div class="tabs">
+    <a href="/customer/dashboard" class="tab">📊 Overview</a>
+    <a href="/customer/transfer" class="tab">💸 Fund Transfer</a>
+    <a href="/customer/transactions" class="tab active">📋 Transactions</a>
+    <a href="/customer/loans" class="tab">🏠 Loans</a>
+    <a href="/customer/profile" class="tab">👤 Profile</a>
+</div>
+
+<div class="main">
+    <h2 class="page-title">📋 Transaction History</h2>
+    <p class="page-sub">View all your past transactions</p>
+
+    <div class="stat-row">
+        <div class="stat-card">
+            <div class="stat-label">💰 Total Credited</div>
+            <div class="stat-value" style="color:#2e7d32">+ Rs. 0.00</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">💸 Total Debited</div>
+            <div class="stat-value" style="color:#c62828">- Rs. 0.00</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">📊 Total Transactions</div>
+            <div class="stat-value">0</div>
+        </div>
+    </div>
+
+    <div class="filter-bar">
+        <input type="date" name="from" placeholder="From date"/>
+        <input type="date" name="to" placeholder="To date"/>
+        <select name="type">
+            <option value="">All Types</option>
+            <option value="CREDIT">Credit</option>
+            <option value="DEBIT">Debit</option>
+            <option value="TRANSFER">Transfer</option>
+        </select>
+        <button class="btn-filter">🔍 Filter</button>
+    </div>
+    <a href="/customer/export-transactions" class="btn-filter">📥 Export CSV</a>
+    <a href="/customer/export-statement" class="btn-filter">📄 Export Statement</a>
+    <div class="card">
+        <div class="card-header">
+            <h3>All Transactions</h3>
+            <span style="font-size:13px;color:#888">Showing latest first</span>
+        </div>
+        <div th:if="${transactions == null or transactions.isEmpty()}">
+            <div class="empty-state">
+                <div>📭</div>
+                <div>No transactions found</div>
+            </div>
+        </div>
+        <table th:if="${transactions != null and !transactions.isEmpty()}">
+            <tr>
+                <th>Date & Time</th>
+                <th>Transaction ID</th>
+                <th>Description</th>
+                <th>Type</th>
+                <th>Amount</th>
+                <th>Status</th>
+            </tr>
+            <tr th:each="tx : ${transactions}">
+                <td th:text="${tx.date}">—</td>
+                <td th:text="${tx.id}">—</td>
+                <td th:text="${tx.description}">—</td>
+                <td><span class="badge badge-blue" th:text="${tx.type}">—</span></td>
+                <td class="amount-credit" th:text="'+ Rs. ' + ${tx.amount}">—</td>
+                <td><span class="badge badge-green">Success</span></td>
+            </tr>
+        </table>
+    </div>
+</div>
+</body>
+</html>

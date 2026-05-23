@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <link rel="stylesheet" th:href="@{/css/global.css}"/>
+    <title>Bill Payments — SecureBank</title>
+    <meta charset="UTF-8"/>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f2f8; min-height: 100vh; display: flex; }
+        .sidebar { width: 240px; background: #1a237e; min-height: 100vh; display: flex; flex-direction: column; flex-shrink: 0; position: fixed; top: 0; left: 0; height: 100%; }
+        .sidebar-logo { padding: 24px 20px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .sidebar-logo-icon { width: 40px; height: 40px; background: rgba(255,255,255,0.15); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+        .sidebar-logo-text { font-size: 17px; font-weight: 700; color: white; }
+        .sidebar-nav { flex: 1; padding: 16px 0; }
+        .nav-section { padding: 8px 20px 4px; font-size: 10px; font-weight: 700; color: rgba(255,255,255,0.4); text-transform: uppercase; letter-spacing: 1px; }
+        .nav-item { display: flex; align-items: center; gap: 12px; padding: 12px 20px; font-size: 14px; color: rgba(255,255,255,0.75); text-decoration: none; transition: all 0.2s; border-left: 3px solid transparent; }
+        .nav-item:hover { background: rgba(255,255,255,0.08); color: white; }
+        .nav-item.active { background: rgba(255,255,255,0.12); color: white; border-left-color: white; font-weight: 600; }
+        .nav-icon { font-size: 18px; width: 22px; text-align: center; }
+        .sidebar-bottom { padding: 16px 20px; border-top: 1px solid rgba(255,255,255,0.1); }
+        .btn-logout { width: 100%; padding: 10px; background: rgba(229,57,53,0.2); color: #ef9a9a; border: 1px solid rgba(229,57,53,0.3); border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .main { margin-left: 240px; flex: 1; }
+        .topbar { background: white; padding: 0 30px; height: 64px; display: flex; align-items: center; border-bottom: 1px solid #e8e8e8; position: sticky; top: 0; z-index: 50; }
+        .topbar-title { font-size: 18px; font-weight: 700; color: #1a1a2e; }
+        .content { padding: 28px 30px; max-width: 900px; }
+        .bill-types { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 28px; }
+        .bill-card { background: white; border-radius: 14px; padding: 22px 16px; text-align: center; border: 2px solid #e8e8e8; cursor: pointer; transition: all 0.2s; }
+        .bill-card:hover, .bill-card.selected { border-color: #1a237e; background: #f5f6ff; }
+        .bill-icon { font-size: 32px; margin-bottom: 10px; }
+        .bill-label { font-size: 13px; font-weight: 600; color: #333; }
+        .card { background: white; border-radius: 14px; border: 0.5px solid #e8e8e8; padding: 28px; margin-bottom: 20px; }
+        .card h3 { font-size: 16px; font-weight: 600; color: #1a1a2e; margin-bottom: 20px; }
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        label { font-size: 12px; font-weight: 600; color: #444; display: block; margin-bottom: 6px; }
+        input, select { width: 100%; padding: 12px 14px; border: 1.5px solid #e0e0e0; border-radius: 8px; font-size: 14px; color: #333; outline: none; background: #fafafa; }
+        input:focus, select:focus { border-color: #1a237e; background: #fff; }
+        .input-group { margin-bottom: 4px; }
+        .bill-summary { background: #f5f6ff; border: 1px solid #e8ecff; border-radius: 12px; padding: 18px 20px; margin: 20px 0; }
+        .bill-row { display: flex; justify-content: space-between; padding: 8px 0; font-size: 13px; border-bottom: 1px solid #e8ecff; }
+        .bill-row:last-child { border-bottom: none; font-weight: 700; font-size: 15px; }
+        .btn { padding: 13px 28px; border: none; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer; background: #1a237e; color: white; width: 100%; margin-top: 8px; }
+        .btn:hover { background: #283593; }
+        .alert { padding: 10px 14px; border-radius: 8px; font-size: 13px; margin-bottom: 16px; }
+        .alert-success { background: #f1f8e9; border: 1px solid #c5e1a5; color: #2e7d32; }
+        .alert-error { background: #fff3f3; border: 1px solid #ffcdd2; color: #c62828; }
+        .history-card { background: white; border-radius: 14px; border: 0.5px solid #e8e8e8; overflow: hidden; }
+        .history-header { padding: 16px 22px; border-bottom: 1px solid #f0f0f0; }
+        .history-header h3 { font-size: 15px; font-weight: 600; color: #1a1a2e; }
+        .empty-state { text-align: center; padding: 40px; color: #ccc; }
+    </style>
+</head>
+<body>
+<script th:src="@{/js/global.js}"></script>
+<div class="sidebar">
+    <div class="sidebar-logo">
+        <div class="sidebar-logo-icon">🏦</div>
+        <span class="sidebar-logo-text">SecureBank</span>
+    </div>
+    <nav class="sidebar-nav">
+        <div class="nav-section">Main Menu</div>
+        <a href="/customer/dashboard" class="nav-item"><span class="nav-icon">📊</span> Dashboard</a>
+        <a href="/customer/transfer" class="nav-item"><span class="nav-icon">💸</span> Fund Transfer</a>
+        <a href="/customer/transactions" class="nav-item"><span class="nav-icon">📋</span> Transactions</a>
+        <a href="/customer/loans" class="nav-item"><span class="nav-icon">🏠</span> Loans</a>
+        <a href="/customer/bills" class="nav-item active"><span class="nav-icon">💡</span> Bill Payments</a>
+        <a href="/customer/fd" class="nav-item"><span class="nav-icon">🏦</span> Fixed Deposit</a>
+        <div class="nav-section" style="margin-top:8px">Account</div>
+        <a href="/customer/profile" class="nav-item"><span class="nav-icon">👤</span> Profile</a>
+        <a href="/customer/statement" class="nav-item"><span class="nav-icon">📄</span> Statement</a>
+        <a href="/customer/help" class="nav-item"><span class="nav-icon">❓</span> Help</a>
+    </nav>
+    <div class="sidebar-bottom">
+        <a href="/logout" class="btn-logout">🚪 Sign Out</a>
+    </div>
+</div>
+<div class="main">
+    <div class="topbar">
+        <button class="mobile-menu-btn" onclick="">☰</button>
+        <span class="topbar-title">💡 Bill Payments</span>
+        <button class="dark-mode-toggle" onclick="toggleDarkMode()">🌙</button>
+    </div>
+    <div class="content">
+        <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+        <div th:if="${error}" class="alert alert-error" th:text="${error}"></div>
+
+        <!-- Bill Types -->
+        <div class="bill-types">
+            <div class="bill-card selected" onclick="selectBill(this,'ELECTRICITY','Electricity Bill')">
+                <div class="bill-icon">⚡</div>
+                <div class="bill-label">Electricity</div>
+            </div>
+            <div class="bill-card" onclick="selectBill(this,'MOBILE','Mobile Recharge')">
+                <div class="bill-icon">📱</div>
+                <div class="bill-label">Mobile</div>
+            </div>
+            <div class="bill-card" onclick="selectBill(this,'INTERNET','Internet Bill')">
+                <div class="bill-icon">🌐</div>
+                <div class="bill-label">Internet</div>
+            </div>
+            <div class="bill-card" onclick="selectBill(this,'DTH','DTH Recharge')">
+                <div class="bill-icon">📺</div>
+                <div class="bill-label">DTH / TV</div>
+            </div>
+            <div class="bill-card" onclick="selectBill(this,'GAS','Gas Bill')">
+                <div class="bill-icon">🔥</div>
+                <div class="bill-label">Gas</div>
+            </div>
+            <div class="bill-card" onclick="selectBill(this,'WATER','Water Bill')">
+                <div class="bill-icon">💧</div>
+                <div class="bill-label">Water</div>
+            </div>
+            <div class="bill-card" onclick="selectBill(this,'INSURANCE','Insurance Premium')">
+                <div class="bill-icon">🛡️</div>
+                <div class="bill-label">Insurance</div>
+            </div>
+            <div class="bill-card" onclick="selectBill(this,'EDUCATION','Education Fee')">
+                <div class="bill-icon">🎓</div>
+                <div class="bill-label">Education</div>
+            </div>
+        </div>
+
+        <!-- Bill Form -->
+        <div class="card">
+            <h3 id="billFormTitle">⚡ Pay Electricity Bill</h3>
+            <form method="post" action="/customer/pay-bill">
+                <input type="hidden" name="billType" id="billTypeInput" value="ELECTRICITY"/>
+                <div class="form-grid">
+                    <div class="input-group">
+                        <label id="consumerLabel">Consumer / Account Number</label>
+                        <input type="text" name="consumerNo" id="consumerNo" placeholder="Enter consumer number" required/>
+                    </div>
+                    <div class="input-group">
+                        <label>Service Provider</label>
+                        <select name="provider" id="providerSelect">
+                            <option>UPPCL</option>
+                            <option>TPDDL</option>
+                            <option>BSES</option>
+                            <option>Other</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label>Amount (₹)</label>
+                        <input type="number" name="amount" placeholder="Enter amount" min="1" required/>
+                    </div>
+                    <div class="input-group">
+                        <label>Bill Month</label>
+                        <input type="month" name="billMonth"/>
+                    </div>
+                </div>
+
+                <!-- Bill Summary -->
+                <div class="bill-summary">
+                    <div class="bill-row"><span>Bill Type</span><span id="summaryType">Electricity</span></div>
+                    <div class="bill-row"><span>Service Charge</span><span>₹ 2.00</span></div>
+                    <div class="bill-row"><span>Total Payable</span><span style="color:#1a237e">Calculated on submit</span></div>
+                </div>
+
+                <button type="submit" class="btn">💳 Pay Bill Now</button>
+            </form>
+        </div>
+
+        <!-- Payment History -->
+        <div class="history-card">
+            <div class="history-header">
+                <h3>📋 Recent Bill Payments</h3>
+            </div>
+            <div class="empty-state">
+                <div style="font-size:36px;margin-bottom:10px">📭</div>
+                <div>No bill payments yet</div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    const providers = {
+        ELECTRICITY: ['UPPCL','TPDDL','BSES','MSEDCL','Other'],
+        MOBILE: ['Jio','Airtel','Vi','BSNL','Other'],
+        INTERNET: ['Jio Fiber','Airtel Xstream','BSNL Broadband','ACT','Other'],
+        DTH: ['Tata Sky','Airtel DTH','Dish TV','Sun Direct','Other'],
+        GAS: ['Indane','HP Gas','Bharat Gas','Other'],
+        WATER: ['Municipal Corporation','Other'],
+        INSURANCE: ['LIC','HDFC Life','SBI Life','Other'],
+        EDUCATION: ['School Fees','College Fees','Coaching','Other']
+    };
+    function selectBill(el, type, label) {
+        document.querySelectorAll('.bill-card').forEach(c => c.classList.remove('selected'));
+        el.classList.add('selected');
+        document.getElementById('billTypeInput').value = type;
+        document.getElementById('billFormTitle').textContent = el.querySelector('.bill-icon').textContent + ' Pay ' + label;
+        document.getElementById('summaryType').textContent = label;
+        const sel = document.getElementById('providerSelect');
+        sel.innerHTML = (providers[type] || ['Other']).map(p => `<option>${p}</option>`).join('');
+    }
+</script>
+</body>
+</html>

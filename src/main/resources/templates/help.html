@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <link rel="stylesheet" th:href="@{/css/global.css}"/>
+    <title>Help & Support — SecureBank</title>
+    <meta charset="UTF-8"/>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f2f8; min-height: 100vh; display: flex; }
+        .sidebar { width: 240px; background: #1a237e; min-height: 100vh; display: flex; flex-direction: column; flex-shrink: 0; position: fixed; top: 0; left: 0; height: 100%; z-index: 100; }
+        .sidebar-logo { padding: 24px 20px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .sidebar-logo-icon { width: 40px; height: 40px; background: rgba(255,255,255,0.15); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+        .sidebar-logo-text { font-size: 17px; font-weight: 700; color: white; }
+        .sidebar-nav { flex: 1; padding: 16px 0; }
+        .nav-section { padding: 8px 20px 4px; font-size: 10px; font-weight: 700; color: rgba(255,255,255,0.4); text-transform: uppercase; letter-spacing: 1px; }
+        .nav-item { display: flex; align-items: center; gap: 12px; padding: 12px 20px; font-size: 14px; color: rgba(255,255,255,0.75); text-decoration: none; transition: all 0.2s; border-left: 3px solid transparent; }
+        .nav-item:hover { background: rgba(255,255,255,0.08); color: white; }
+        .nav-item.active { background: rgba(255,255,255,0.12); color: white; border-left-color: white; font-weight: 600; }
+        .nav-icon { font-size: 18px; width: 22px; text-align: center; }
+        .sidebar-bottom { padding: 16px 20px; border-top: 1px solid rgba(255,255,255,0.1); }
+        .btn-logout { width: 100%; padding: 10px; background: rgba(229,57,53,0.2); color: #ef9a9a; border: 1px solid rgba(229,57,53,0.3); border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .main { margin-left: 240px; flex: 1; }
+        .topbar { background: white; padding: 0 30px; height: 64px; display: flex; align-items: center; border-bottom: 1px solid #e8e8e8; position: sticky; top: 0; z-index: 50; }
+        .topbar-title { font-size: 18px; font-weight: 700; color: #1a1a2e; }
+        .content { padding: 28px 30px; max-width: 900px; }
+        .hero { background: linear-gradient(135deg, #1a237e, #1565c0); color: white; border-radius: 16px; padding: 32px; margin-bottom: 28px; text-align: center; }
+        .hero h2 { font-size: 26px; font-weight: 700; margin-bottom: 8px; }
+        .hero p { font-size: 14px; opacity: 0.8; }
+        .search-wrap { background: white; border-radius: 10px; padding: 6px; margin-top: 20px; display: flex; gap: 8px; max-width: 500px; margin: 20px auto 0; }
+        .search-wrap input { flex: 1; padding: 10px 14px; border: none; outline: none; font-size: 14px; border-radius: 8px; }
+        .search-wrap button { padding: 10px 20px; background: #1a237e; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; }
+        .faq-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-bottom: 28px; }
+        .faq-card { background: white; border-radius: 12px; border: 0.5px solid #e8e8e8; padding: 20px; }
+        .faq-card h4 { font-size: 14px; font-weight: 600; color: #1a1a2e; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+        .faq-card p { font-size: 13px; color: #666; line-height: 1.6; }
+        .contact-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 28px; }
+        .contact-card { background: white; border-radius: 12px; border: 0.5px solid #e8e8e8; padding: 24px; text-align: center; }
+        .contact-icon { font-size: 32px; margin-bottom: 12px; }
+        .contact-title { font-size: 14px; font-weight: 600; color: #1a1a2e; margin-bottom: 4px; }
+        .contact-sub { font-size: 12px; color: #888; margin-bottom: 12px; }
+        .contact-value { font-size: 13px; color: #1a237e; font-weight: 600; }
+        .card { background: white; border-radius: 12px; border: 0.5px solid #e8e8e8; padding: 24px; margin-bottom: 20px; }
+        .card h3 { font-size: 16px; font-weight: 600; color: #1a1a2e; margin-bottom: 18px; }
+        label { font-size: 12px; font-weight: 600; color: #444; display: block; margin-bottom: 6px; }
+        input, select, textarea { width: 100%; padding: 11px 14px; border: 1.5px solid #e0e0e0; border-radius: 8px; font-size: 13px; color: #333; outline: none; background: #fafafa; margin-bottom: 14px; }
+        input:focus, select:focus, textarea:focus { border-color: #1a237e; }
+        textarea { height: 100px; resize: vertical; }
+        .btn { padding: 12px 28px; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; background: #1a237e; color: white; }
+        .btn:hover { background: #283593; }
+        .alert-success { background: #f1f8e9; border: 1px solid #c5e1a5; color: #2e7d32; padding: 10px 14px; border-radius: 8px; font-size: 13px; margin-bottom: 16px; }
+    </style>
+</head>
+<body>
+<script th:src="@{/js/global.js}"></script>
+<div class="sidebar">
+    <div class="sidebar-logo">
+        <div class="sidebar-logo-icon">🏦</div>
+        <span class="sidebar-logo-text">SecureBank</span>
+    </div>
+    <nav class="sidebar-nav">
+        <div class="nav-section">Main Menu</div>
+        <a href="/customer/dashboard" class="nav-item"><span class="nav-icon">📊</span> Dashboard</a>
+        <a href="/customer/transfer" class="nav-item"><span class="nav-icon">💸</span> Fund Transfer</a>
+        <a href="/customer/transactions" class="nav-item"><span class="nav-icon">📋</span> Transactions</a>
+        <a href="/customer/loans" class="nav-item"><span class="nav-icon">🏠</span> Loans</a>
+        <div class="nav-section" style="margin-top:8px">Account</div>
+        <a href="/customer/profile" class="nav-item"><span class="nav-icon">👤</span> Profile</a>
+        <a href="/customer/help" class="nav-item active"><span class="nav-icon">❓</span> Help & Support</a>
+    </nav>
+    <div class="sidebar-bottom">
+        <a href="/logout" class="btn-logout">🚪 Sign Out</a>
+    </div>
+</div>
+<div class="main">
+    <div class="topbar">
+        <span class="topbar-title">❓ Help & Support</span>
+        <button class="mobile-menu-btn" onclick="">☰</button>
+        <button class="dark-mode-toggle" onclick="toggleDarkMode()">🌙</button>
+    </div>
+    <div class="content">
+        <div class="hero">
+            <h2>How can we help you?</h2>
+            <p>Find answers to common questions or contact our support team</p>
+            <div class="search-wrap">
+                <input type="text" placeholder="Search for help..."/>
+                <button>Search</button>
+            </div>
+        </div>
+
+        <!-- Contact Options -->
+        <div class="contact-grid">
+            <div class="contact-card">
+                <div class="contact-icon">📞</div>
+                <div class="contact-title">Phone Support</div>
+                <div class="contact-sub">Mon–Sat, 9AM–6PM</div>
+                <div class="contact-value">1800-123-4567</div>
+            </div>
+            <div class="contact-card">
+                <div class="contact-icon">📧</div>
+                <div class="contact-title">Email Support</div>
+                <div class="contact-sub">Reply within 24 hours</div>
+                <div class="contact-value">support@securebank.com</div>
+            </div>
+            <div class="contact-card">
+                <div class="contact-icon">💬</div>
+                <div class="contact-title">Live Chat</div>
+                <div class="contact-sub">Available 24/7</div>
+                <div class="contact-value">Chat Now →</div>
+            </div>
+        </div>
+
+        <!-- FAQ -->
+        <h3 style="font-size:16px;font-weight:700;color:#1a1a2e;margin-bottom:14px">Frequently Asked Questions</h3>
+        <div class="faq-grid">
+            <div class="faq-card">
+                <h4>🔒 How do I reset my password?</h4>
+                <p>Click "Forgot Password" on the login page. Enter your email, verify the OTP, and set a new password.</p>
+            </div>
+            <div class="faq-card">
+                <h4>💸 What is the daily transfer limit?</h4>
+                <p>The daily transfer limit is ₹1,00,000 via NEFT/IMPS. RTGS is available for amounts above ₹2,00,000.</p>
+            </div>
+            <div class="faq-card">
+                <h4>📱 What is 2FA authentication?</h4>
+                <p>Two-factor authentication sends a 6-digit OTP to your registered email on every login for extra security.</p>
+            </div>
+            <div class="faq-card">
+                <h4>🏠 How long does loan approval take?</h4>
+                <p>Loan applications are reviewed within 2-3 business days. You will be notified via email once approved.</p>
+            </div>
+            <div class="faq-card">
+                <h4>🔓 My account is locked. What do I do?</h4>
+                <p>Accounts are locked after 3 failed login attempts. Use "Forgot Password" to reset or contact admin.</p>
+            </div>
+            <div class="faq-card">
+                <h4>📋 How do I download my statement?</h4>
+                <p>Go to Transactions → click "Download Statement" to export your transaction history as PDF.</p>
+            </div>
+        </div>
+
+        <!-- Contact Form -->
+        <div class="card">
+            <h3>📩 Send Us a Message</h3>
+            <div id="successMsg" class="alert-success" style="display:none">✅ Your message has been sent! We'll respond within 24 hours.</div>
+            <form onsubmit="submitForm(event)">
+                <label>Subject</label>
+                <select>
+                    <option>Account Issue</option>
+                    <option>Transaction Problem</option>
+                    <option>Loan Enquiry</option>
+                    <option>Security Concern</option>
+                    <option>Other</option>
+                </select>
+                <label>Your Message</label>
+                <textarea placeholder="Describe your issue in detail..."></textarea>
+                <button type="submit" class="btn">Send Message →</button>
+            </form>
+        </div>
+    </div>
+</div>
+<script>
+    function submitForm(e) {
+        e.preventDefault();
+        document.getElementById('successMsg').style.display = 'block';
+        e.target.reset();
+        setTimeout(() => document.getElementById('successMsg').style.display = 'none', 5000);
+    }
+</script>
+</body>
+</html>

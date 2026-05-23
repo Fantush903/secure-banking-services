@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <link rel="stylesheet" th:href="@{/css/global.css}"/>
+    <title>Verify OTP</title>
+    <meta charset="UTF-8"/>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: #0a0f1e; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+        .card { background: white; border-radius: 16px; padding: 50px 45px; width: 440px; box-shadow: 0 25px 60px rgba(0,0,0,0.5); text-align: center; }
+        .icon-wrap { width: 70px; height: 70px; background: #e8eaf6; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 32px; margin: 0 auto 20px; }
+        h2 { font-size: 22px; font-weight: 700; color: #1a1a2e; margin-bottom: 8px; }
+        .subtitle { font-size: 13px; color: #888; margin-bottom: 8px; }
+        .email-highlight { font-size: 13px; color: #1a237e; font-weight: 600; margin-bottom: 28px; }
+        .alert { padding: 10px 14px; border-radius: 8px; font-size: 13px; margin-bottom: 16px; text-align: left; }
+        .alert-error { background: #fff3f3; border: 1px solid #ffcdd2; color: #c62828; }
+        .alert-success { background: #f1f8e9; border: 1px solid #c5e1a5; color: #2e7d32; }
+        .otp-inputs { display: flex; gap: 10px; justify-content: center; margin-bottom: 24px; }
+        .otp-inputs input { width: 52px; height: 58px; text-align: center; font-size: 22px; font-weight: 700; border: 2px solid #e0e0e0; border-radius: 10px; color: #1a237e; outline: none; background: #fafafa; }
+        .otp-inputs input:focus { border-color: #1a237e; background: #fff; }
+        .btn { width: 100%; padding: 13px; border: none; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer; background: #1a237e; color: white; margin-bottom: 16px; }
+        .btn:hover { background: #283593; }
+        .resend { font-size: 13px; color: #888; }
+        .resend a { color: #1a237e; text-decoration: none; font-weight: 600; }
+        .timer { font-size: 13px; color: #e53935; font-weight: 600; margin-bottom: 16px; }
+        .steps { display: flex; gap: 8px; margin-bottom: 28px; }
+        .step { flex: 1; height: 4px; border-radius: 4px; background: #e0e0e0; }
+        .step.active { background: #1a237e; }
+        .back-link { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: #1a237e; text-decoration: none; margin-bottom: 28px; font-weight: 500; float: left; }
+    </style>
+</head>
+<body>
+<script th:src="@{/js/global.js}"></script>
+<div class="card">
+    <a href="/forgot-password" class="back-link">← Back</a>
+    <div style="clear:both"></div>
+    <div class="steps" style="margin-top:10px">
+        <div class="step active"></div>
+        <div class="step active"></div>
+        <div class="step"></div>
+    </div>
+    <div class="icon-wrap">📱</div>
+    <h2>Verify OTP</h2>
+    <p class="subtitle">We sent a 6-digit code to</p>
+    <p class="email-highlight" th:text="${email}">you@example.com</p>
+
+    <div th:if="${error}" class="alert alert-error" th:text="${error}"></div>
+
+    <form method="post" action="/verify-otp" id="otpForm">
+        <input type="hidden" name="email" th:value="${email}"/>
+        <input type="hidden" name="type" th:value="${type}"/>
+        <div class="otp-inputs">
+            <input type="text" maxlength="1" class="otp-box" id="o1" autofocus/>
+            <input type="text" maxlength="1" class="otp-box" id="o2"/>
+            <input type="text" maxlength="1" class="otp-box" id="o3"/>
+            <input type="text" maxlength="1" class="otp-box" id="o4"/>
+            <input type="text" maxlength="1" class="otp-box" id="o5"/>
+            <input type="text" maxlength="1" class="otp-box" id="o6"/>
+        </div>
+        <input type="hidden" name="otp" id="otpValue"/>
+        <div class="timer" id="timer">OTP expires in: 05:00</div>
+        <button type="submit" class="btn">Verify OTP →</button>
+    </form>
+
+    <p class="resend">Didn't receive it? <a href="/resend-otp" th:href="'/resend-otp?email=' + ${email}">Resend OTP</a></p>
+</div>
+<script>
+    const boxes = document.querySelectorAll('.otp-box');
+    boxes.forEach((box, i) => {
+        box.addEventListener('input', () => {
+            if (box.value && i < boxes.length - 1) boxes[i + 1].focus();
+            updateOtp();
+        });
+        box.addEventListener('keydown', (e) => {
+            if (e.key === 'Backspace' && !box.value && i > 0) boxes[i - 1].focus();
+        });
+    });
+    function updateOtp() {
+        document.getElementById('otpValue').value = [...boxes].map(b => b.value).join('');
+    }
+    let seconds = 300;
+    const timer = document.getElementById('timer');
+    const interval = setInterval(() => {
+        seconds--;
+        const m = String(Math.floor(seconds / 60)).padStart(2, '0');
+        const s = String(seconds % 60).padStart(2, '0');
+        timer.textContent = 'OTP expires in: ' + m + ':' + s;
+        if (seconds <= 0) { clearInterval(interval); timer.textContent = 'OTP expired. Please resend.'; timer.style.color = '#999'; }
+    }, 1000);
+</script>
+</body>
+</html>

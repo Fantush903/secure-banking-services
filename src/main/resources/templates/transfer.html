@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <link rel="stylesheet" th:href="@{/css/global.css}"/>
+    <title>Fund Transfer</title>
+    <meta charset="UTF-8"/>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f2f8; min-height: 100vh; }
+        .navbar { background: #1a237e; color: white; padding: 0 30px; height: 64px; display: flex; align-items: center; justify-content: space-between; }
+        .nav-left { display: flex; align-items: center; gap: 12px; }
+        .nav-logo { width: 38px; height: 38px; background: rgba(255,255,255,0.15); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+        .nav-title { font-size: 18px; font-weight: 700; }
+        .btn-logout { padding: 8px 18px; background: #e53935; color: white; border: none; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; text-decoration: none; }
+        .tabs { background: white; border-bottom: 1px solid #e0e0e0; padding: 0 30px; display: flex; gap: 4px; }
+        .tab { padding: 16px 20px; font-size: 14px; font-weight: 500; color: #777; text-decoration: none; border-bottom: 2px solid transparent; }
+        .tab:hover { color: #1a237e; }
+        .tab.active { color: #1a237e; border-bottom-color: #1a237e; }
+        .main { padding: 30px; max-width: 700px; margin: 0 auto; }
+        .page-title { font-size: 22px; font-weight: 700; color: #1a1a2e; margin-bottom: 6px; }
+        .page-sub { font-size: 13px; color: #888; margin-bottom: 24px; }
+        .balance-bar { background: linear-gradient(135deg, #1a237e, #283593); color: white; padding: 20px 24px; border-radius: 12px; margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center; }
+        .balance-bar span { font-size: 13px; opacity: 0.8; }
+        .balance-bar strong { font-size: 24px; font-weight: 700; }
+        .card { background: white; border-radius: 12px; border: 0.5px solid #e8e8e8; padding: 28px; }
+        .alert { padding: 10px 14px; border-radius: 8px; font-size: 13px; margin-bottom: 16px; }
+        .alert-error { background: #fff3f3; border: 1px solid #ffcdd2; color: #c62828; }
+        .alert-success { background: #f1f8e9; border: 1px solid #c5e1a5; color: #2e7d32; }
+        label { font-size: 12px; font-weight: 600; color: #444; display: block; margin-bottom: 6px; }
+        .input-group { margin-bottom: 18px; }
+        input, select { width: 100%; padding: 12px 16px; border: 1.5px solid #e0e0e0; border-radius: 8px; font-size: 14px; color: #333; outline: none; background: #fafafa; }
+        input:focus, select:focus { border-color: #1a237e; background: #fff; }
+        .amount-wrap { position: relative; }
+        .amount-prefix { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); font-weight: 700; color: #1a237e; font-size: 15px; }
+        .amount-wrap input { padding-left: 34px; }
+        .quick-amounts { display: flex; gap: 8px; margin-bottom: 18px; }
+        .quick-btn { flex: 1; padding: 8px; border: 1.5px solid #e8ecff; border-radius: 8px; font-size: 12px; font-weight: 600; color: #1a237e; background: white; cursor: pointer; }
+        .quick-btn:hover { background: #f5f6ff; border-color: #1a237e; }
+        .divider { border: none; border-top: 1px solid #f0f0f0; margin: 20px 0; }
+        .btn { width: 100%; padding: 13px; border: none; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer; background: #1a237e; color: white; margin-top: 4px; }
+        .btn:hover { background: #283593; }
+        .security-note { display: flex; align-items: center; gap: 8px; font-size: 12px; color: #888; margin-top: 14px; justify-content: center; }
+    </style>
+</head>
+<body>
+<script th:src="@{/js/global.js}"></script>
+<div class="navbar">
+    <div class="nav-left">
+        <div class="nav-logo">🏦</div>
+        <span class="nav-title">SecureBank</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:14px">
+        <span style="font-size:14px" th:text="${session.user.name}">User</span>
+        <a href="/logout" class="btn-logout">Logout</a>
+    </div>
+</div>
+
+<div class="tabs">
+    <a href="/customer/dashboard" class="tab">📊 Overview</a>
+    <a href="/customer/transfer" class="tab active">💸 Fund Transfer</a>
+    <a href="/customer/transactions" class="tab">📋 Transactions</a>
+    <a href="/customer/loans" class="tab">🏠 Loans</a>
+    <a href="/customer/profile" class="tab">👤 Profile</a>
+</div>
+
+<div class="main">
+    <h2 class="page-title">💸 Fund Transfer</h2>
+    <p class="page-sub">Transfer money securely to any account</p>
+
+    <div class="balance-bar">
+        <div>
+            <span>Available Balance</span><br/>
+            <strong>Rs. 50,000.00</strong>
+        </div>
+        <div style="text-align:right">
+            <span>Account</span><br/>
+            <strong style="font-size:15px">1001-0000-0001</strong>
+        </div>
+    </div>
+
+    <div class="card">
+        <div th:if="${error}" class="alert alert-error" th:text="${error}"></div>
+        <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+
+        <form method="post" action="/customer/transfer">
+            <div class="input-group">
+                <label>Recipient Account Number</label>
+                <input type="text" name="toAccount" placeholder="Enter 16-digit account number" required maxlength="16"/>
+            </div>
+            <div class="input-group">
+                <label>Transfer Type</label>
+                <select name="transferType">
+                    <option value="NEFT">NEFT — National Electronic Funds Transfer</option>
+                    <option value="RTGS">RTGS — Real Time Gross Settlement</option>
+                    <option value="IMPS">IMPS — Immediate Payment Service</option>
+                </select>
+            </div>
+            <div class="input-group">
+                <label>Amount (Rs.)</label>
+                <div class="amount-wrap">
+                    <span class="amount-prefix">₹</span>
+                    <input type="number" name="amount" id="amountInput" placeholder="0.00" min="1" required/>
+                </div>
+            </div>
+            <div class="quick-amounts">
+                <button type="button" class="quick-btn" onclick="setAmount(500)">₹500</button>
+                <button type="button" class="quick-btn" onclick="setAmount(1000)">₹1,000</button>
+                <button type="button" class="quick-btn" onclick="setAmount(5000)">₹5,000</button>
+                <button type="button" class="quick-btn" onclick="setAmount(10000)">₹10,000</button>
+            </div>
+            <div class="input-group">
+                <label>Remarks (Optional)</label>
+                <input type="text" name="remarks" placeholder="e.g. Rent, Fees, Gift..."/>
+            </div>
+            <hr class="divider"/>
+            <button type="submit" class="btn">Transfer Money →</button>
+            <p class="security-note">🔒 Secured with 256-bit encryption</p>
+        </form>
+    </div>
+</div>
+<script>
+    function setAmount(val) {
+        document.getElementById('amountInput').value = val;
+    }
+</script>
+</body>
+</html>

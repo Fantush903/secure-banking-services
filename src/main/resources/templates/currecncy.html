@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Currency Converter — SecureBank</title>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f2f8; min-height: 100vh; display: flex; }
+        .sidebar { width: 240px; background: #1a237e; min-height: 100vh; display: flex; flex-direction: column; flex-shrink: 0; position: fixed; top: 0; left: 0; height: 100%; z-index: 100; }
+        .sidebar-logo { padding: 24px 20px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .sidebar-logo-icon { width: 40px; height: 40px; background: rgba(255,255,255,0.15); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+        .sidebar-logo-text { font-size: 17px; font-weight: 700; color: white; }
+        .sidebar-nav { flex: 1; padding: 16px 0; overflow-y: auto; }
+        .nav-section { padding: 8px 20px 4px; font-size: 10px; font-weight: 700; color: rgba(255,255,255,0.4); text-transform: uppercase; letter-spacing: 1px; }
+        .nav-item { display: flex; align-items: center; gap: 12px; padding: 12px 20px; font-size: 14px; color: rgba(255,255,255,0.75); text-decoration: none; transition: all 0.2s; border-left: 3px solid transparent; }
+        .nav-item:hover { background: rgba(255,255,255,0.08); color: white; }
+        .nav-item.active { background: rgba(255,255,255,0.12); color: white; border-left-color: white; font-weight: 600; }
+        .nav-icon { font-size: 18px; width: 22px; text-align: center; }
+        .sidebar-bottom { padding: 16px 20px; border-top: 1px solid rgba(255,255,255,0.1); }
+        .btn-logout { width: 100%; padding: 10px; background: rgba(229,57,53,0.2); color: #ef9a9a; border: 1px solid rgba(229,57,53,0.3); border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .main { margin-left: 240px; flex: 1; }
+        .topbar { background: white; padding: 0 30px; height: 64px; display: flex; align-items: center; border-bottom: 1px solid #e8e8e8; position: sticky; top: 0; z-index: 50; }
+        .topbar-title { font-size: 18px; font-weight: 700; color: #1a1a2e; }
+        .content { padding: 28px 30px; max-width: 800px; }
+        .converter-card { background: white; border-radius: 16px; border: 0.5px solid #e8e8e8; padding: 32px; margin-bottom: 24px; }
+        .converter-card h3 { font-size: 18px; font-weight: 700; color: #1a1a2e; margin-bottom: 24px; text-align: center; }
+        .converter-row { display: flex; align-items: center; gap: 16px; margin-bottom: 16px; }
+        .converter-input-wrap { flex: 1; }
+        label { font-size: 12px; font-weight: 600; color: #444; display: block; margin-bottom: 6px; }
+        .currency-input { display: flex; border: 1.5px solid #e0e0e0; border-radius: 10px; overflow: hidden; }
+        .currency-flag { padding: 12px 14px; background: #fafafa; font-size: 20px; border-right: 1px solid #e0e0e0; display: flex; align-items: center; }
+        .currency-input select { padding: 12px; border: none; outline: none; font-size: 14px; font-weight: 600; color: #333; background: #fafafa; min-width: 100px; }
+        .currency-input input { flex: 1; padding: 12px 14px; border: none; outline: none; font-size: 18px; font-weight: 700; color: #1a237e; }
+        .swap-btn { width: 44px; height: 44px; background: #e8eaf6; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; cursor: pointer; flex-shrink: 0; transition: all 0.3s; border: none; }
+        .swap-btn:hover { background: #1a237e; color: white; transform: rotate(180deg); }
+        .result-box { background: linear-gradient(135deg, #1a237e, #1565c0); color: white; border-radius: 12px; padding: 20px 24px; margin: 20px 0; text-align: center; }
+        .result-amount { font-size: 36px; font-weight: 800; margin-bottom: 4px; }
+        .result-rate { font-size: 13px; opacity: 0.8; }
+        .btn-convert { width: 100%; padding: 14px; background: #1a237e; color: white; border: none; border-radius: 10px; font-size: 16px; font-weight: 700; cursor: pointer; margin-top: 8px; }
+        .btn-convert:hover { background: #283593; }
+        .rates-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+        .rate-card { background: white; border-radius: 12px; border: 0.5px solid #e8e8e8; padding: 16px; text-align: center; }
+        .rate-currency { font-size: 24px; margin-bottom: 6px; }
+        .rate-code { font-size: 13px; font-weight: 700; color: #333; }
+        .rate-value { font-size: 15px; font-weight: 800; color: #1a237e; margin-top: 4px; }
+        .rate-change { font-size: 11px; margin-top: 3px; }
+        .change-up { color: #2e7d32; }
+        .change-down { color: #c62828; }
+        .disclaimer { background: #fff8e1; border: 1px solid #ffe082; border-radius: 8px; padding: 12px 16px; font-size: 12px; color: #795548; margin-top: 16px; }
+    </style>
+</head>
+<body>
+<div class="sidebar">
+    <div class="sidebar-logo">
+        <div class="sidebar-logo-icon">🏦</div>
+        <span class="sidebar-logo-text">SecureBank</span>
+    </div>
+    <nav class="sidebar-nav">
+        <div class="nav-section">Main Menu</div>
+        <a href="/customer/dashboard" class="nav-item"><span class="nav-icon">📊</span> Dashboard</a>
+        <a href="/customer/transfer" class="nav-item"><span class="nav-icon">💸</span> Fund Transfer</a>
+        <a href="/customer/upi" class="nav-item"><span class="nav-icon">📲</span> UPI Payment</a>
+        <a href="/customer/transactions" class="nav-item"><span class="nav-icon">📋</span> Transactions</a>
+        <a href="/customer/loans" class="nav-item"><span class="nav-icon">🏠</span> Loans</a>
+        <a href="/customer/bills" class="nav-item"><span class="nav-icon">💡</span> Bill Payments</a>
+        <a href="/customer/fd" class="nav-item"><span class="nav-icon">🏦</span> Fixed Deposit</a>
+        <a href="/customer/currency" class="nav-item active"><span class="nav-icon">💱</span> Currency Converter</a>
+        <div class="nav-section" style="margin-top:8px">Account</div>
+        <a href="/customer/profile" class="nav-item"><span class="nav-icon">👤</span> Profile</a>
+        <a href="/customer/statement" class="nav-item"><span class="nav-icon">📄</span> Statement</a>
+        <a href="/customer/help" class="nav-item"><span class="nav-icon">❓</span> Help</a>
+    </nav>
+    <div class="sidebar-bottom">
+        <a href="/logout" class="btn-logout">🚪 Sign Out</a>
+    </div>
+</div>
+<div class="main">
+    <div class="topbar"><span class="topbar-title">💱 Currency Converter</span></div>
+    <div class="content">
+        <!-- Converter -->
+        <div class="converter-card">
+            <h3>💱 Real-Time Currency Converter</h3>
+            <div class="converter-row">
+                <div class="converter-input-wrap">
+                    <label>From</label>
+                    <div class="currency-input">
+                        <span class="currency-flag" id="fromFlag">🇮🇳</span>
+                        <select id="fromCurrency" onchange="convert(); updateFlag('from')">
+                            <option value="INR">INR — Indian Rupee</option>
+                            <option value="USD">USD — US Dollar</option>
+                            <option value="EUR">EUR — Euro</option>
+                            <option value="GBP">GBP — British Pound</option>
+                            <option value="JPY">JPY — Japanese Yen</option>
+                            <option value="AED">AED — UAE Dirham</option>
+                            <option value="SGD">SGD — Singapore Dollar</option>
+                            <option value="CAD">CAD — Canadian Dollar</option>
+                            <option value="AUD">AUD — Australian Dollar</option>
+                        </select>
+                        <input type="number" id="fromAmount" value="1000" oninput="convert()" placeholder="Amount"/>
+                    </div>
+                </div>
+                <button class="swap-btn" onclick="swapCurrencies()">⇄</button>
+                <div class="converter-input-wrap">
+                    <label>To</label>
+                    <div class="currency-input">
+                        <span class="currency-flag" id="toFlag">🇺🇸</span>
+                        <select id="toCurrency" onchange="convert(); updateFlag('to')">
+                            <option value="USD">USD — US Dollar</option>
+                            <option value="INR">INR — Indian Rupee</option>
+                            <option value="EUR">EUR — Euro</option>
+                            <option value="GBP">GBP — British Pound</option>
+                            <option value="JPY">JPY — Japanese Yen</option>
+                            <option value="AED">AED — UAE Dirham</option>
+                            <option value="SGD">SGD — Singapore Dollar</option>
+                            <option value="CAD">CAD — Canadian Dollar</option>
+                            <option value="AUD">AUD — Australian Dollar</option>
+                        </select>
+                        <input type="number" id="toAmount" readonly style="background:#f0f4ff;color:#1a237e"/>
+                    </div>
+                </div>
+            </div>
+            <div class="result-box">
+                <div class="result-amount" id="resultText">₹1,000 = $12.05</div>
+                <div class="result-rate" id="rateText">1 INR = 0.01205 USD • Updated just now</div>
+            </div>
+            <div class="disclaimer">⚠️ Exchange rates are indicative and for reference only. Actual rates may vary. Contact your bank for forex transactions.</div>
+        </div>
+
+        <!-- Live Rates -->
+        <h3 style="font-size:16px;font-weight:700;color:#1a1a2e;margin-bottom:14px">📈 Live Exchange Rates (vs INR)</h3>
+        <div class="rates-grid">
+            <div class="rate-card"><div class="rate-currency">🇺🇸</div><div class="rate-code">USD</div><div class="rate-value">₹ 83.25</div><div class="rate-change change-down">▼ 0.12%</div></div>
+            <div class="rate-card"><div class="rate-currency">🇪🇺</div><div class="rate-code">EUR</div><div class="rate-value">₹ 90.48</div><div class="rate-change change-up">▲ 0.08%</div></div>
+            <div class="rate-card"><div class="rate-currency">🇬🇧</div><div class="rate-code">GBP</div><div class="rate-value">₹ 105.32</div><div class="rate-change change-up">▲ 0.15%</div></div>
+            <div class="rate-card"><div class="rate-currency">🇦🇪</div><div class="rate-code">AED</div><div class="rate-value">₹ 22.67</div><div class="rate-change change-down">▼ 0.05%</div></div>
+            <div class="rate-card"><div class="rate-currency">🇸🇬</div><div class="rate-code">SGD</div><div class="rate-value">₹ 61.84</div><div class="rate-change change-up">▲ 0.22%</div></div>
+            <div class="rate-card"><div class="rate-currency">🇯🇵</div><div class="rate-code">JPY</div><div class="rate-value">₹ 0.55</div><div class="rate-change change-down">▼ 0.18%</div></div>
+        </div>
+    </div>
+</div>
+<script>
+    const rates = { INR:1, USD:0.01205, EUR:0.01108, GBP:0.00950, JPY:1.82, AED:0.04423, SGD:0.01617, CAD:0.01643, AUD:0.01854 };
+    const flags = { INR:'🇮🇳', USD:'🇺🇸', EUR:'🇪🇺', GBP:'🇬🇧', JPY:'🇯🇵', AED:'🇦🇪', SGD:'🇸🇬', CAD:'🇨🇦', AUD:'🇦🇺' };
+    const symbols = { INR:'₹', USD:'$', EUR:'€', GBP:'£', JPY:'¥', AED:'AED', SGD:'S$', CAD:'C$', AUD:'A$' };
+
+    function convert() {
+        const from = document.getElementById('fromCurrency').value;
+        const to = document.getElementById('toCurrency').value;
+        const amount = parseFloat(document.getElementById('fromAmount').value) || 0;
+        const inINR = amount / rates[from];
+        const result = inINR * rates[to];
+        document.getElementById('toAmount').value = result.toFixed(4);
+        const rate = rates[to] / rates[from];
+        document.getElementById('resultText').textContent = `${symbols[from]}${amount.toLocaleString()} = ${symbols[to]}${result.toFixed(2)}`;
+        document.getElementById('rateText').textContent = `1 ${from} = ${rate.toFixed(5)} ${to} • Updated just now`;
+    }
+
+    function swapCurrencies() {
+        const fc = document.getElementById('fromCurrency');
+        const tc = document.getElementById('toCurrency');
+        [fc.value, tc.value] = [tc.value, fc.value];
+        updateFlag('from'); updateFlag('to'); convert();
+    }
+
+    function updateFlag(dir) {
+        const val = document.getElementById(dir + 'Currency').value;
+        document.getElementById(dir + 'Flag').textContent = flags[val] || '🏳️';
+    }
+
+    convert();
+</script>
+</body>
+</html>
