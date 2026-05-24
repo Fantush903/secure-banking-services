@@ -1,10 +1,12 @@
 package com.banking.OnlineBankingWeb.controller;
 
-import com.banking.OnlineBankingWeb.model.Customer;
+import com.banking.OnlineBankingWeb.model.*;
+import com.banking.OnlineBankingWeb.repository.*;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -12,10 +14,14 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.time.LocalDate;
+import java.util.List;
 
 @Controller
 @RequestMapping("/customer")
 public class ExportController {
+
+    @Autowired private TransactionRepository transactionRepository;
+    @Autowired private AccountRepository accountRepository;
 
     // ── Export Transactions as CSV ───────────────────────────
     @GetMapping("/export-transactions")
@@ -27,6 +33,7 @@ public class ExportController {
         }
 
         Customer user = (Customer) session.getAttribute("user");
+        Account account = accountRepository.findByCustomerId(user.getCustomerID());
 
         response.setContentType("text/csv");
         response.setHeader("Content-Disposition",
@@ -44,14 +51,22 @@ public class ExportController {
             writer.println("# Account Holder: " + user.getName());
             writer.println("# Email: " + user.getEmail());
             writer.println("# Generated: " + LocalDate.now());
-            writer.println("# Account Number: 1001-0000-0001");
+            writer.println("# Account Number: " + (account != null ? account.getAccountNumber() : "N/A"));
             writer.println();
 
-            // ── Sample data (replace with DB query in production) ──
-            csvPrinter.printRecord("2026-05-01", "TXN001", "Account Opening Credit", "CREDIT", "50000.00", "50000.00", "SUCCESS");
-            csvPrinter.printRecord("2026-05-05", "TXN002", "Fund Transfer to 1234567890123456", "DEBIT", "5000.00", "45000.00", "SUCCESS");
-            csvPrinter.printRecord("2026-05-10", "TXN003", "Electricity Bill Payment", "DEBIT", "1200.00", "43800.00", "SUCCESS");
-            csvPrinter.printRecord("2026-05-15", "TXN004", "Salary Credit", "CREDIT", "30000.00", "73800.00", "SUCCESS");
+            // ── Retrieve real transactions from DB ──
+            List<Transaction> transactions = transactionRepository.findByFromCustomerIdOrderByCreatedAtDesc(user.getCustomerID());
+            for (Transaction tx : transactions) {
+                csvPrinter.printRecord(
+                        tx.getCreatedAt().toLocalDate().toString(),
+                        tx.getTransactionId(),
+                        tx.getDescription(),
+                        tx.getType(),
+                        String.format("%.2f", tx.getAmount()),
+                        String.format("%.2f", tx.getBalanceAfter()),
+                        tx.getStatus()
+                );
+            }
 
             csvPrinter.flush();
         }
@@ -65,6 +80,8 @@ public class ExportController {
             return;
         }
         Customer user = (Customer) session.getAttribute("user");
+        Account account = accountRepository.findByCustomerId(user.getCustomerID());
+
         response.setContentType("text/csv");
         response.setHeader("Content-Disposition",
                 "attachment; filename=\"statement_" + LocalDate.now() + ".csv\"");
@@ -77,15 +94,23 @@ public class ExportController {
 
             writer.println("# SecureBank — Account Statement");
             writer.println("# Account Holder: " + user.getName());
-            writer.println("# Account No: 1001-0000-0001 | Type: SAVINGS");
+            writer.println("# Account No: " + (account != null ? account.getAccountNumber() : "N/A") + " | Type: " + (account != null ? account.getAccountType() : "SAVINGS"));
             writer.println("# Statement Period: " + LocalDate.now().minusMonths(1) + " to " + LocalDate.now());
             writer.println();
 
-            csvPrinter.printRecord("2026-05-01", "Opening Balance", "", "50000.00", "50000.00");
-            csvPrinter.printRecord("2026-05-05", "Fund Transfer", "5000.00", "", "45000.00");
-            csvPrinter.printRecord("2026-05-10", "Electricity Bill", "1200.00", "", "43800.00");
-            csvPrinter.printRecord("2026-05-15", "Salary Credit", "", "30000.00", "73800.00");
-            csvPrinter.printRecord("", "Closing Balance", "", "", "73800.00");
+            // ── Retrieve real transactions from DB ──
+            List<Transaction> transactions = transactionRepository.findByFromCustomerIdOrderByCreatedAtDesc(user.getCustomerID());
+            for (Transaction tx : transactions) {
+                String debit = "DEBIT".equals(tx.getType()) ? String.format("%.2f", tx.getAmount()) : "";
+                String credit = "CREDIT".equals(tx.getType()) ? String.format("%.2f", tx.getAmount()) : "";
+                csvPrinter.printRecord(
+                        tx.getCreatedAt().toLocalDate().toString(),
+                        tx.getDescription(),
+                        debit,
+                        credit,
+                        String.format("%.2f", tx.getBalanceAfter())
+                );
+            }
 
             csvPrinter.flush();
         }

@@ -2,7 +2,10 @@ package com.banking.OnlineBankingWeb.controller;
 
 import com.banking.OnlineBankingWeb.model.Customer;
 import com.banking.OnlineBankingWeb.repository.CustomerRepository;
+import com.banking.OnlineBankingWeb.model.Account;
+import com.banking.OnlineBankingWeb.repository.AccountRepository;
 import com.banking.OnlineBankingWeb.service.EmailService;
+import java.time.LocalDate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -12,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 public class RegisterController {
 
     @Autowired private CustomerRepository customerRepository;
+    @Autowired private AccountRepository accountRepository;
     @Autowired(required = false) private EmailService emailService;
 
     @GetMapping("/register")
@@ -37,6 +41,16 @@ public class RegisterController {
         customer.setAddress(address); customer.setPassword(password);
         customer.setRole("CUSTOMER"); customer.setStatus("ACTIVE"); customer.setFailedLogins(0);
         customerRepository.save(customer);
+
+        // Auto-provision a savings account for the new customer
+        Account account = new Account();
+        account.setCustomerId(customer.getCustomerID());
+        account.setAccountNumber(String.format("1001%012d", customer.getCustomerID()));
+        account.setAccountType("SAVINGS");
+        account.setBalance(50000.00);
+        account.setStatus("ACTIVE");
+        account.setOpenedDate(LocalDate.now());
+        accountRepository.save(account);
 
         if (emailService != null) emailService.sendWelcome(email, name);
         System.out.println("=== NEW REGISTRATION: " + email + " ===");

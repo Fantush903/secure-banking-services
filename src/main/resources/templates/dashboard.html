@@ -171,11 +171,11 @@
             <div class="balance-top">
                 <div>
                     <div class="balance-label">Total Available Balance</div>
-                    <div class="balance-amount">₹ 50,000.00</div>
-                    <div class="balance-sub">Savings Account • 1001-0000-0001</div>
+                    <div class="balance-amount">₹ <span th:text="${#numbers.formatDecimal(account.balance, 1, 2, 'POINT')}">50,000.00</span></div>
+                    <div class="balance-sub">Savings Account • <span th:text="${account.accountNumber}">1001-0000-0001</span></div>
                 </div>
                 <div style="text-align:right">
-                    <div class="balance-card-num">**** **** **** 0001</div>
+                    <div class="balance-card-num">**** **** **** <span th:text="${account.accountNumber.substring(account.accountNumber.length()-4)}">0001</span></div>
                     <div style="font-size:12px;opacity:0.6;margin-top:6px" th:text="${session.user.email}">fantusharyanfkb@gmail.com</div>
                 </div>
             </div>
@@ -191,7 +191,7 @@
             <div class="stat-card">
                 <div class="stat-icon-wrap stat-icon-green">💰</div>
                 <div class="stat-info">
-                    <div class="stat-value">₹ 0</div>
+                    <div class="stat-value">₹ <span th:text="${#numbers.formatDecimal(totalCredited, 1, 2, 'POINT')}">0.00</span></div>
                     <div class="stat-label">Total Credited</div>
                     <div class="stat-change change-up">↑ This month</div>
                 </div>
@@ -199,7 +199,7 @@
             <div class="stat-card">
                 <div class="stat-icon-wrap stat-icon-orange">💸</div>
                 <div class="stat-info">
-                    <div class="stat-value">₹ 0</div>
+                    <div class="stat-value">₹ <span th:text="${#numbers.formatDecimal(totalDebited, 1, 2, 'POINT')}">0.00</span></div>
                     <div class="stat-label">Total Debited</div>
                     <div class="stat-change change-down">↓ This month</div>
                 </div>
@@ -207,7 +207,7 @@
             <div class="stat-card">
                 <div class="stat-icon-wrap stat-icon-blue">📊</div>
                 <div class="stat-info">
-                    <div class="stat-value">0</div>
+                    <div class="stat-value" th:text="${totalTxCount}">0</div>
                     <div class="stat-label">Transactions</div>
                     <div class="stat-change" style="color:#888">All time</div>
                 </div>
@@ -278,11 +278,11 @@
                 <div class="info-list">
                     <div class="info-row">
                         <span class="info-key">Account No.</span>
-                        <span class="info-val">1001-0000-0001</span>
+                        <span class="info-val" th:text="${account.accountNumber}">1001-0000-0001</span>
                     </div>
                     <div class="info-row">
                         <span class="info-key">Account Type</span>
-                        <span class="info-val">Savings</span>
+                        <span class="info-val" th:text="${account.accountType}">Savings</span>
                     </div>
                     <div class="info-row">
                         <span class="info-key">Status</span>

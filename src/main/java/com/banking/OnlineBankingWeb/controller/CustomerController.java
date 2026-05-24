@@ -1,29 +1,82 @@
 package com.banking.OnlineBankingWeb.controller;
 
-import com.banking.OnlineBankingWeb.model.Customer;
-import com.banking.OnlineBankingWeb.repository.CustomerRepository;
+import com.banking.OnlineBankingWeb.model.*;
+import com.banking.OnlineBankingWeb.repository.*;
+import com.banking.OnlineBankingWeb.service.EmailService;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import java.time.LocalDate;
+import java.util.List;
 
 @Controller
 @RequestMapping("/customer")
 public class CustomerController {
 
     @Autowired private CustomerRepository customerRepository;
+    @Autowired private AccountRepository accountRepository;
+    @Autowired private TransactionRepository transactionRepository;
+    @Autowired private LoanRepository loanRepository;
+    @Autowired private BeneficiaryRepository beneficiaryRepository;
+    @Autowired(required = false) private EmailService emailService;
 
     // ── Dashboard ────────────────────────────────────────────
     @GetMapping("/dashboard")
-    public String dashboard(HttpSession session) {
+    public String dashboard(HttpSession session, Model model) {
         if (!ok(session)) return "redirect:/login";
+        Customer user = user(session);
+
+        // Fetch or auto-provision account
+        Account account = accountRepository.findByCustomerId(user.getCustomerID());
+        if (account == null) {
+            account = new Account();
+            account.setCustomerId(user.getCustomerID());
+            account.setAccountNumber(String.format("1001%012d", user.getCustomerID()));
+            account.setAccountType("SAVINGS");
+            account.setBalance(50000.00);
+            account.setStatus("ACTIVE");
+            account.setOpenedDate(LocalDate.now());
+            accountRepository.save(account);
+        }
+
+        // Fetch top 5 recent transactions
+        List<Transaction> transactions = transactionRepository.findTop5ByFromCustomerIdOrderByCreatedAtDesc(user.getCustomerID());
+
+        // Fetch sums
+        Double totalDebited = transactionRepository.sumDebitByCustomerId(user.getCustomerID());
+        Double totalCredited = transactionRepository.sumCreditByCustomerId(user.getCustomerID());
+        List<Transaction> allTx = transactionRepository.findByFromCustomerIdOrderByCreatedAtDesc(user.getCustomerID());
+
+        model.addAttribute("account", account);
+        model.addAttribute("transactions", transactions);
+        model.addAttribute("totalDebited", totalDebited != null ? totalDebited : 0.0);
+        model.addAttribute("totalCredited", totalCredited != null ? totalCredited : 0.0);
+        model.addAttribute("totalTxCount", allTx.size());
+
         return "dashboard";
     }
 
     // ── Fund Transfer ────────────────────────────────────────
     @GetMapping("/transfer")
-    public String transferPage(HttpSession session) { if (!ok(session)) return "redirect:/login"; return "transfer"; }
+    public String transferPage(HttpSession session, Model model) {
+        if (!ok(session)) return "redirect:/login";
+        Customer u = user(session);
+        Account account = accountRepository.findByCustomerId(u.getCustomerID());
+        if (account == null) {
+            account = new Account();
+            account.setCustomerId(u.getCustomerID());
+            account.setAccountNumber(String.format("1001%012d", u.getCustomerID()));
+            account.setAccountType("SAVINGS");
+            account.setBalance(50000.00);
+            account.setStatus("ACTIVE");
+            account.setOpenedDate(LocalDate.now());
+            accountRepository.save(account);
+        }
+        model.addAttribute("account", account);
+        return "transfer";
+    }
 
     @PostMapping("/transfer")
     public String doTransfer(@RequestParam String toAccount, @RequestParam String transferType,
@@ -31,24 +84,115 @@ public class CustomerController {
                              HttpSession session, Model model) {
         if (!ok(session)) return "redirect:/login";
         Customer u = user(session);
+        Account senderAccount = accountRepository.findByCustomerId(u.getCustomerID());
+        
+        // Re-add account to model in case of error/success
+        model.addAttribute("account", senderAccount);
+
         if (amount <= 0) { model.addAttribute("error","Amount must be greater than zero."); return "transfer"; }
         if (amount > 100000) { model.addAttribute("error","Daily limit is ₹1,00,000."); return "transfer"; }
         if (toAccount.length() != 16) { model.addAttribute("error","Account number must be 16 digits."); return "transfer"; }
-        System.out.println("TRANSFER: "+u.getEmail()+" → "+toAccount+" ₹"+amount+" ["+transferType+"]");
+        if (senderAccount == null) { model.addAttribute("error","Sender account not found."); return "transfer"; }
+        if (senderAccount.getBalance() < amount) { model.addAttribute("error","Insufficient balance."); return "transfer"; }
+        
+        // Check if destination account is internal
+        Account receiverAccount = accountRepository.findByAccountNumber(toAccount);
+        
+        // Deduct from sender
+        senderAccount.setBalance(senderAccount.getBalance() - amount);
+        accountRepository.save(senderAccount);
+        
+        // Record debit transaction for sender
+        Transaction debitTx = new Transaction();
+        debitTx.setFromCustomerId(u.getCustomerID());
+        debitTx.setToAccount(toAccount);
+        debitTx.setAmount(amount);
+        debitTx.setType("DEBIT");
+        debitTx.setTransferType(transferType);
+        debitTx.setDescription("Fund Transfer to " + toAccount);
+        debitTx.setBalanceAfter(senderAccount.getBalance());
+        debitTx.setRemarks(remarks);
+        transactionRepository.save(debitTx);
+        
+        if (receiverAccount != null) {
+            // Credit receiver
+            receiverAccount.setBalance(receiverAccount.getBalance() + amount);
+            accountRepository.save(receiverAccount);
+            
+            // Record credit transaction for receiver
+            Transaction creditTx = new Transaction();
+            creditTx.setFromCustomerId(receiverAccount.getCustomerId());
+            creditTx.setToAccount(toAccount);
+            creditTx.setAmount(amount);
+            creditTx.setType("CREDIT");
+            creditTx.setTransferType(transferType);
+            creditTx.setDescription("Fund Transfer from " + senderAccount.getAccountNumber());
+            creditTx.setBalanceAfter(receiverAccount.getBalance());
+            creditTx.setRemarks(remarks);
+            transactionRepository.save(creditTx);
+        }
+        
+        if (emailService != null) {
+            emailService.sendTransferConfirmation(u.getEmail(), u.getName(), toAccount, amount, transferType);
+        }
+        
         model.addAttribute("success","✅ ₹"+fmt(amount)+" transferred to "+toAccount+" via "+transferType+"!");
         return "transfer";
     }
 
     // ── UPI ──────────────────────────────────────────────────
     @GetMapping("/upi")
-    public String upiPage(HttpSession session) { if (!ok(session)) return "redirect:/login"; return "upi"; }
+    public String upiPage(HttpSession session, Model model) {
+        if (!ok(session)) return "redirect:/login";
+        Customer u = user(session);
+        Account account = accountRepository.findByCustomerId(u.getCustomerID());
+        if (account == null) {
+            account = new Account();
+            account.setCustomerId(u.getCustomerID());
+            account.setAccountNumber(String.format("1001%012d", u.getCustomerID()));
+            account.setAccountType("SAVINGS");
+            account.setBalance(50000.00);
+            account.setStatus("ACTIVE");
+            account.setOpenedDate(LocalDate.now());
+            accountRepository.save(account);
+        }
+        model.addAttribute("account", account);
+        return "upi";
+    }
 
     @PostMapping("/upi-send")
     public String upiSend(@RequestParam String toUpiId, @RequestParam double amount,
                           @RequestParam(required=false) String note, HttpSession session, Model model) {
         if (!ok(session)) return "redirect:/login";
+        Customer u = user(session);
+        Account senderAccount = accountRepository.findByCustomerId(u.getCustomerID());
+        model.addAttribute("account", senderAccount);
+
         if (!toUpiId.contains("@")) { model.addAttribute("error","Invalid UPI ID."); return "upi"; }
         if (amount <= 0) { model.addAttribute("error","Amount must be > 0."); return "upi"; }
+        if (senderAccount == null) { model.addAttribute("error","Account not found."); return "upi"; }
+        if (senderAccount.getBalance() < amount) { model.addAttribute("error","Insufficient balance."); return "upi"; }
+
+        // Deduct balance
+        senderAccount.setBalance(senderAccount.getBalance() - amount);
+        accountRepository.save(senderAccount);
+
+        // Record debit transaction
+        Transaction debitTx = new Transaction();
+        debitTx.setFromCustomerId(u.getCustomerID());
+        debitTx.setToAccount(toUpiId);
+        debitTx.setAmount(amount);
+        debitTx.setType("DEBIT");
+        debitTx.setTransferType("UPI");
+        debitTx.setDescription("UPI Send to " + toUpiId);
+        debitTx.setBalanceAfter(senderAccount.getBalance());
+        debitTx.setRemarks(note);
+        transactionRepository.save(debitTx);
+
+        if (emailService != null) {
+            emailService.sendTransferConfirmation(u.getEmail(), u.getName(), toUpiId, amount, "UPI");
+        }
+
         model.addAttribute("success","✅ ₹"+fmt(amount)+" sent to "+toUpiId+"!");
         return "upi";
     }
@@ -63,19 +207,80 @@ public class CustomerController {
 
     // ── Transactions ─────────────────────────────────────────
     @GetMapping("/transactions")
-    public String transactions(HttpSession session) { if (!ok(session)) return "redirect:/login"; return "transactions"; }
+    public String transactions(HttpSession session, Model model) {
+        if (!ok(session)) return "redirect:/login";
+        Customer u = user(session);
+        Account account = accountRepository.findByCustomerId(u.getCustomerID());
+        List<Transaction> transactions = transactionRepository.findByFromCustomerIdOrderByCreatedAtDesc(u.getCustomerID());
+        
+        Double totalDebited = transactionRepository.sumDebitByCustomerId(u.getCustomerID());
+        Double totalCredited = transactionRepository.sumCreditByCustomerId(u.getCustomerID());
+        
+        model.addAttribute("account", account);
+        model.addAttribute("transactions", transactions);
+        model.addAttribute("totalDebited", totalDebited != null ? totalDebited : 0.0);
+        model.addAttribute("totalCredited", totalCredited != null ? totalCredited : 0.0);
+        model.addAttribute("totalTxCount", transactions.size());
+        return "transactions";
+    }
 
     // ── Loans ────────────────────────────────────────────────
     @GetMapping("/loans")
-    public String loansPage(HttpSession session) { if (!ok(session)) return "redirect:/login"; return "loans"; }
+    public String loansPage(HttpSession session, Model model) {
+        if (!ok(session)) return "redirect:/login";
+        Customer u = user(session);
+        List<Loan> loans = loanRepository.findByCustomerIdOrderByAppliedAtDesc(u.getCustomerID());
+        model.addAttribute("loans", loans);
+        return "loans";
+    }
 
     @PostMapping("/apply-loan")
     public String applyLoan(@RequestParam String loanType, @RequestParam double amount,
                             @RequestParam int tenure, @RequestParam(required=false) String purpose,
                             @RequestParam(required=false) String income, HttpSession session, Model model) {
         if (!ok(session)) return "redirect:/login";
-        if (amount < 10000) { model.addAttribute("error","Minimum loan ₹10,000."); return "loans"; }
+        Customer u = user(session);
+        
+        if (amount < 10000) {
+            model.addAttribute("error","Minimum loan ₹10,000.");
+            model.addAttribute("loans", loanRepository.findByCustomerIdOrderByAppliedAtDesc(u.getCustomerID()));
+            return "loans";
+        }
+
+        double rate = 8.5;
+        if ("PERSONAL".equalsIgnoreCase(loanType)) rate = 12.0;
+        else if ("EDUCATION".equalsIgnoreCase(loanType)) rate = 9.0;
+
+        // Calculate EMI
+        double monthlyRate = rate / 100.0 / 12.0;
+        double emi = amount * monthlyRate * Math.pow(1 + monthlyRate, tenure) / (Math.pow(1 + monthlyRate, tenure) - 1);
+        if (Double.isNaN(emi) || Double.isInfinite(emi)) {
+            emi = amount / tenure;
+        }
+
+        double incomeVal = 0.0;
+        try {
+            if (income != null && !income.trim().isEmpty()) {
+                incomeVal = Double.parseDouble(income);
+            }
+        } catch (NumberFormatException e) {
+            // ignore
+        }
+
+        Loan loan = new Loan();
+        loan.setCustomerId(u.getCustomerID());
+        loan.setLoanType(loanType);
+        loan.setAmount(amount);
+        loan.setTenureMonths(tenure);
+        loan.setInterestRate(rate);
+        loan.setEmiAmount(emi);
+        loan.setPurpose(purpose);
+        loan.setMonthlyIncome(incomeVal);
+        loan.setStatus("PENDING");
+        loanRepository.save(loan);
+
         model.addAttribute("success","✅ "+loanType+" loan for ₹"+fmt(amount)+" submitted! Response in 2-3 days.");
+        model.addAttribute("loans", loanRepository.findByCustomerIdOrderByAppliedAtDesc(u.getCustomerID()));
         return "loans";
     }
 
@@ -120,7 +325,13 @@ public class CustomerController {
 
     // ── Beneficiaries ────────────────────────────────────────
     @GetMapping("/beneficiaries")
-    public String beneficiariesPage(HttpSession session) { if (!ok(session)) return "redirect:/login"; return "beneficiaries"; }
+    public String beneficiariesPage(HttpSession session, Model model) {
+        if (!ok(session)) return "redirect:/login";
+        Customer u = user(session);
+        List<Beneficiary> beneficiaries = beneficiaryRepository.findByCustomerId(u.getCustomerID());
+        model.addAttribute("beneficiaries", beneficiaries);
+        return "beneficiaries";
+    }
 
     @PostMapping("/add-beneficiary")
     public String addBeneficiary(@RequestParam String name, @RequestParam String accountNo,
@@ -128,14 +339,37 @@ public class CustomerController {
                                  @RequestParam(required=false) String nickname, @RequestParam(required=false) String mobile,
                                  HttpSession session, Model model) {
         if (!ok(session)) return "redirect:/login";
-        if (accountNo.length() != 16) { model.addAttribute("error","Account must be 16 digits."); return "beneficiaries"; }
+        Customer u = user(session);
+        if (accountNo.length() != 16) {
+            model.addAttribute("error","Account must be 16 digits.");
+            model.addAttribute("beneficiaries", beneficiaryRepository.findByCustomerId(u.getCustomerID()));
+            return "beneficiaries";
+        }
+
+        Beneficiary beneficiary = new Beneficiary();
+        beneficiary.setCustomerId(u.getCustomerID());
+        beneficiary.setName(name);
+        beneficiary.setAccountNo(accountNo);
+        beneficiary.setBankName(bankName);
+        beneficiary.setIfsc(ifsc);
+        beneficiary.setNickname(nickname != null && !nickname.trim().isEmpty() ? nickname : null);
+        beneficiary.setMobile(mobile);
+        beneficiaryRepository.save(beneficiary);
+
         model.addAttribute("success","✅ Beneficiary "+name+" added!");
+        model.addAttribute("beneficiaries", beneficiaryRepository.findByCustomerId(u.getCustomerID()));
         return "beneficiaries";
     }
 
     @GetMapping("/delete-beneficiary/{id}")
     public String deleteBeneficiary(@PathVariable int id, HttpSession session) {
         if (!ok(session)) return "redirect:/login";
+        Customer u = user(session);
+        beneficiaryRepository.findById(id).ifPresent(b -> {
+            if (b.getCustomerId() == u.getCustomerID()) {
+                beneficiaryRepository.delete(b);
+            }
+        });
         return "redirect:/customer/beneficiaries";
     }
 
