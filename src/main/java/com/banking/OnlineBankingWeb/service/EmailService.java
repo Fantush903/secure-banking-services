@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import jakarta.mail.internet.MimeMessage;
 
@@ -17,6 +18,7 @@ public class EmailService {
     private String fromEmail;
 
     // ─── Send OTP Email ──────────────────────────────────────
+    @Async
     public void sendOTP(String toEmail, String otp, String type) {
         String subject = type.equals("2fa") ?
                 "SecureBank — Login OTP" : "SecureBank — Password Reset OTP";
@@ -26,6 +28,7 @@ public class EmailService {
     }
 
     // ─── Send Welcome Email ──────────────────────────────────
+    @Async
     public void sendWelcome(String toEmail, String name) {
         String subject = "Welcome to SecureBank! 🏦";
         String body = buildWelcomeEmail(name, toEmail);
@@ -33,6 +36,7 @@ public class EmailService {
     }
 
     // ─── Send Transfer Confirmation ──────────────────────────
+    @Async
     public void sendTransferConfirmation(String toEmail, String name,
                                          String toAccount, double amount, String type) {
         String subject = "SecureBank — Transfer Confirmation ₹" + String.format("%.2f", amount);
@@ -41,6 +45,7 @@ public class EmailService {
     }
 
     // ─── Send Loan Status Email ──────────────────────────────
+    @Async
     public void sendLoanStatus(String toEmail, String name,
                                String loanType, double amount, String status) {
         String subject = "SecureBank — Loan Application " + status;
