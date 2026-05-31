@@ -44,7 +44,7 @@ public class ExportController {
              CSVPrinter csvPrinter = new CSVPrinter(writer,
                      CSVFormat.DEFAULT.builder()
                              .setHeader("Date", "Transaction ID", "Description", "Type", "Amount (₹)", "Balance (₹)", "Status")
-                             .build())) {
+                            .get())) {
 
             // ── Write account info header ────────────────────
             writer.println("# SecureBank — Transaction Statement");
@@ -90,7 +90,7 @@ public class ExportController {
              CSVPrinter csvPrinter = new CSVPrinter(writer,
                      CSVFormat.DEFAULT.builder()
                              .setHeader("Date", "Particulars", "Debit (₹)", "Credit (₹)", "Balance (₹)")
-                             .build())) {
+                            .get())) {
 
             writer.println("# SecureBank — Account Statement");
             writer.println("# Account Holder: " + user.getName());

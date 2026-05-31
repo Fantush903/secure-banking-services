@@ -100,20 +100,32 @@
         <div class="card-visual">
             <div class="card-bank">🏦 SecureBank</div>
             <div class="card-chip"></div>
-            <div class="card-number">1001 **** **** 0001</div>
+            <div class="card-number" id="cardNumberDisplay" 
+                 th:data-full="${account.cardNumber}" 
+                 th:data-masked="${account.cardNumber != null ? account.cardNumber.substring(0, 4) + ' •••• •••• ' + account.cardNumber.substring(account.cardNumber.length() - 4) : '•••• •••• •••• ••••'}" 
+                 th:text="${account.cardNumber != null ? account.cardNumber.substring(0, 4) + ' •••• •••• ' + account.cardNumber.substring(account.cardNumber.length() - 4) : '•••• •••• •••• ••••'}">1001 **** **** 0001</div>
             <div class="card-bottom">
                 <div>
                     <div class="card-holder-label">Card Holder</div>
                     <div class="card-holder-name" th:text="${session.user.name?.toUpperCase()}">Fantush Kumar</div>
                 </div>
                 <div class="card-expiry">
-                    <div class="card-holder-label">Expires</div>
-                    <div style="font-size:13px;font-weight:700">12/28</div>
+                    <div class="card-holder-label">Expires / CVV</div>
+                    <div style="font-size:13px;font-weight:700">
+                        <span th:text="${account.cardExpiry}">12/28</span>
+                        <span> / </span>
+                        <span id="cvvDisplay" th:data-cvv="${account.cardCvv}">•••</span>
+                    </div>
                 </div>
                 <div class="card-network">💳</div>
             </div>
         </div>
-        <span class="card-status status-active">● ACTIVE</span>
+        
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:28px">
+            <span class="card-status" th:classappend="${account.cardStatus == 'ACTIVE' ? 'status-active' : 'status-blocked'}" 
+                  th:text="${account.cardStatus == 'ACTIVE' ? '● ACTIVE' : '● BLOCKED'}">● ACTIVE</span>
+            <button type="button" class="quick-btn" id="revealCardBtn" onclick="toggleRevealCard()" style="padding:5px 12px;font-size:12px;font-weight:600;cursor:pointer;border-radius:20px;border:1px solid #1a237e;color:#1a237e;background:white">👁️ Reveal Card Details</button>
+        </div>
 
         <!-- Controls -->
         <div class="controls-grid">
@@ -122,25 +134,25 @@
                 <h3>🔒 Card Controls</h3>
                 <div class="toggle-row">
                     <span class="toggle-label">Online Transactions</span>
-                    <button class="toggle on" onclick="this.classList.toggle('on');this.classList.toggle('off')">
+                    <button class="toggle" th:classappend="${account.onlineEnabled ? 'on' : 'off'}" onclick="toggleFeature('online')">
                         <div class="toggle-dot"></div>
                     </button>
                 </div>
                 <div class="toggle-row">
                     <span class="toggle-label">International Usage</span>
-                    <button class="toggle off" onclick="this.classList.toggle('on');this.classList.toggle('off')">
+                    <button class="toggle" th:classappend="${account.intlEnabled ? 'on' : 'off'}" onclick="toggleFeature('intl')">
                         <div class="toggle-dot"></div>
                     </button>
                 </div>
                 <div class="toggle-row">
                     <span class="toggle-label">Contactless Payments</span>
-                    <button class="toggle on" onclick="this.classList.toggle('on');this.classList.toggle('off')">
+                    <button class="toggle" th:classappend="${account.contactlessEnabled ? 'on' : 'off'}" onclick="toggleFeature('contactless')">
                         <div class="toggle-dot"></div>
                     </button>
                 </div>
                 <div class="toggle-row">
                     <span class="toggle-label">ATM Withdrawals</span>
-                    <button class="toggle on" onclick="this.classList.toggle('on');this.classList.toggle('off')">
+                    <button class="toggle" th:classappend="${account.atmEnabled ? 'on' : 'off'}" onclick="toggleFeature('atm')">
                         <div class="toggle-dot"></div>
                     </button>
                 </div>
@@ -151,23 +163,23 @@
                 <h3>💰 Transaction Limits</h3>
                 <form method="post" action="/customer/update-card-limits">
                     <label>Daily ATM Limit (₹)</label>
-                    <input type="number" name="atmLimit" value="10000" min="1000" max="50000"/>
+                    <input type="number" name="atmLimit" th:value="${#numbers.formatDecimal(account.atmLimit, 1, 0)}" min="1000" max="50000"/>
                     <label>Daily POS/Online Limit (₹)</label>
-                    <input type="number" name="posLimit" value="50000" min="1000" max="200000"/>
+                    <input type="number" name="posLimit" th:value="${#numbers.formatDecimal(account.posLimit, 1, 0)}" min="1000" max="200000"/>
                     <button type="submit" class="btn btn-primary">💾 Save Limits</button>
                 </form>
             </div>
 
             <!-- PIN Change -->
             <div class="control-card">
-                <h3>🔑 Change PIN</h3>
+                <h3>🔑 Change Debit Card PIN</h3>
                 <form method="post" action="/customer/change-pin">
-                    <label>Current PIN</label>
-                    <input type="password" name="currentPin" placeholder="4-digit PIN" maxlength="4"/>
-                    <label>New PIN</label>
-                    <input type="password" name="newPin" placeholder="4-digit PIN" maxlength="4"/>
-                    <label>Confirm New PIN</label>
-                    <input type="password" name="confirmPin" placeholder="Repeat new PIN" maxlength="4"/>
+                    <label>Current Card PIN</label>
+                    <input type="password" name="currentPin" placeholder="4-digit PIN" maxlength="4" required/>
+                    <label>New Card PIN</label>
+                    <input type="password" name="newPin" placeholder="4-digit PIN" maxlength="4" required/>
+                    <label>Confirm New Card PIN</label>
+                    <input type="password" name="confirmPin" placeholder="Repeat new PIN" maxlength="4" required/>
                     <button type="submit" class="btn btn-primary">🔑 Change PIN</button>
                 </form>
             </div>
@@ -176,14 +188,50 @@
             <div class="control-card">
                 <h3>⚙️ Card Actions</h3>
                 <div style="display:flex;flex-direction:column;gap:10px">
-                    <button class="btn btn-warning" onclick="confirm('Block card temporarily?')">⏸️ Temporarily Block Card</button>
-                    <button class="btn btn-primary" onclick="confirm('Report card as lost?')">📋 Report Lost / Stolen</button>
-                    <button class="btn btn-primary">🔄 Request Replacement Card</button>
-                    <button class="btn btn-danger" onclick="confirm('Permanently block this card?')">🚫 Permanently Block Card</button>
+                    <form method="post" action="/customer/block-card">
+                        <button type="submit" class="btn" th:classappend="${account.cardStatus == 'ACTIVE' ? 'btn-danger' : 'btn-primary'}"
+                                th:text="${account.cardStatus == 'ACTIVE' ? '⏸️ Temporarily Block Card' : '▶️ Unblock Card'}">⏸️ Temporarily Block Card</button>
+                    </form>
+                    <button class="btn btn-primary" onclick="alert('Card reported lost. Replacement card has been ordered!')">📋 Report Lost / Stolen</button>
+                    <button class="btn btn-primary" onclick="alert('Replacement card requested.')">🔄 Request Replacement Card</button>
                 </div>
             </div>
         </div>
     </div>
-</div>
+<script>
+    let detailsRevealed = false;
+    function toggleRevealCard() {
+        const numEl = document.getElementById('cardNumberDisplay');
+        const cvvEl = document.getElementById('cvvDisplay');
+        const btn = document.getElementById('revealCardBtn');
+        
+        if (!detailsRevealed) {
+            numEl.textContent = numEl.getAttribute('data-full').replace(/-/g, ' ');
+            cvvEl.textContent = cvvEl.getAttribute('data-cvv');
+            btn.textContent = '🔒 Hide Card Details';
+            detailsRevealed = true;
+        } else {
+            numEl.textContent = numEl.getAttribute('data-masked');
+            cvvEl.textContent = '•••';
+            btn.textContent = '👁️ Reveal Card Details';
+            detailsRevealed = false;
+        }
+    }
+
+    function toggleFeature(featureName) {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '/customer/toggle-card-feature';
+        
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = 'feature';
+        input.value = featureName;
+        form.appendChild(input);
+        
+        document.body.appendChild(form);
+        form.submit();
+    }
+</script>
 </body>
 </html>

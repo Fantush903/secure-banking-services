@@ -7,6 +7,7 @@ import com.banking.OnlineBankingWeb.repository.AccountRepository;
 import com.banking.OnlineBankingWeb.service.EmailService;
 import java.time.LocalDate;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -17,6 +18,7 @@ public class RegisterController {
     @Autowired private CustomerRepository customerRepository;
     @Autowired private AccountRepository accountRepository;
     @Autowired(required = false) private EmailService emailService;
+    @Autowired private PasswordEncoder passwordEncoder;
 
     @GetMapping("/register")
     public String registerPage() { return "register"; }
@@ -38,7 +40,7 @@ public class RegisterController {
 
         Customer customer = new Customer();
         customer.setName(name); customer.setEmail(email); customer.setPhone(phone);
-        customer.setAddress(address); customer.setPassword(password);
+        customer.setAddress(address); customer.setPassword(passwordEncoder.encode(password));
         customer.setRole("CUSTOMER"); customer.setStatus("ACTIVE"); customer.setFailedLogins(0);
         customerRepository.save(customer);
 
@@ -50,6 +52,7 @@ public class RegisterController {
         account.setBalance(50000.00);
         account.setStatus("ACTIVE");
         account.setOpenedDate(LocalDate.now());
+        account.settPin(passwordEncoder.encode("1234"));
         accountRepository.save(account);
 
         if (emailService != null) emailService.sendWelcome(email, name);

@@ -19,6 +19,7 @@ public class SessionInterceptor implements HandlerInterceptor {
 
         // ── Public paths — always allowed ──────────────────
         if (path.equals("/") ||
+                path.equals("/home") ||
                 path.equals("/login") ||
                 path.equals("/register") ||
                 path.equals("/forgot-password") ||

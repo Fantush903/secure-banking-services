@@ -72,29 +72,30 @@
     <div class="stat-row">
         <div class="stat-card">
             <div class="stat-label">💰 Total Credited</div>
-            <div class="stat-value" style="color:#2e7d32">+ Rs. 0.00</div>
+            <div class="stat-value" style="color:#2e7d32" th:text="'+ Rs. ' + ${#numbers.formatDecimal(totalCredited, 1, 2, 'POINT')}">+ Rs. 0.00</div>
         </div>
         <div class="stat-card">
             <div class="stat-label">💸 Total Debited</div>
-            <div class="stat-value" style="color:#c62828">- Rs. 0.00</div>
+            <div class="stat-value" style="color:#c62828" th:text="'- Rs. ' + ${#numbers.formatDecimal(totalDebited, 1, 2, 'POINT')}">- Rs. 0.00</div>
         </div>
         <div class="stat-card">
             <div class="stat-label">📊 Total Transactions</div>
-            <div class="stat-value">0</div>
+            <div class="stat-value" th:text="${totalTxCount}">0</div>
         </div>
     </div>
 
-    <div class="filter-bar">
-        <input type="date" name="from" placeholder="From date"/>
-        <input type="date" name="to" placeholder="To date"/>
-        <select name="type">
-            <option value="">All Types</option>
-            <option value="CREDIT">Credit</option>
-            <option value="DEBIT">Debit</option>
-            <option value="TRANSFER">Transfer</option>
-        </select>
-        <button class="btn-filter">🔍 Filter</button>
-    </div>
+    <form method="get" action="/customer/transactions">
+        <div class="filter-bar">
+            <input type="date" name="from" th:value="${from}" placeholder="From date"/>
+            <input type="date" name="to" th:value="${to}" placeholder="To date"/>
+            <select name="type">
+                <option value="" th:selected="${type == null or type == ''}">All Types</option>
+                <option value="CREDIT" th:selected="${type == 'CREDIT'}">Credit</option>
+                <option value="DEBIT" th:selected="${type == 'DEBIT'}">Debit</option>
+            </select>
+            <button type="submit" class="btn-filter">🔍 Filter</button>
+        </div>
+    </form>
     <a href="/customer/export-transactions" class="btn-filter">📥 Export CSV</a>
     <a href="/customer/export-statement" class="btn-filter">📄 Export Statement</a>
     <div class="card">
@@ -118,12 +119,17 @@
                 <th>Status</th>
             </tr>
             <tr th:each="tx : ${transactions}">
-                <td th:text="${tx.date}">—</td>
-                <td th:text="${tx.id}">—</td>
+                <td th:text="${#temporals.format(tx.createdAt, 'dd-MM-yyyy HH:mm')}">—</td>
+                <td th:text="${tx.transactionId}">—</td>
                 <td th:text="${tx.description}">—</td>
-                <td><span class="badge badge-blue" th:text="${tx.type}">—</span></td>
-                <td class="amount-credit" th:text="'+ Rs. ' + ${tx.amount}">—</td>
-                <td><span class="badge badge-green">Success</span></td>
+                <td>
+                    <span class="badge" th:classappend="${tx.type == 'CREDIT' ? 'badge-green' : 'badge-red'}" th:text="${tx.type}">—</span>
+                </td>
+                <td th:class="${tx.type == 'CREDIT' ? 'amount-credit' : 'amount-debit'}" 
+                    th:text="${tx.type == 'CREDIT' ? '+ Rs. ' + #numbers.formatDecimal(tx.amount, 1, 2, 'POINT') : '- Rs. ' + #numbers.formatDecimal(tx.amount, 1, 2, 'POINT')}">—</td>
+                <td>
+                    <span class="badge" th:classappend="${tx.status == 'SUCCESS' ? 'badge-green' : (tx.status == 'FAILED' ? 'badge-red' : 'badge-blue')}" th:text="${tx.status != null ? tx.status : 'SUCCESS'}">Success</span>
+                </td>
             </tr>
         </table>
     </div>

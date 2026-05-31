@@ -4,7 +4,9 @@ import com.banking.OnlineBankingWeb.model.*;
 import com.banking.OnlineBankingWeb.repository.*;
 import com.banking.OnlineBankingWeb.service.EmailService;
 import jakarta.servlet.http.HttpSession;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -21,6 +23,8 @@ public class CustomerController {
     @Autowired private LoanRepository loanRepository;
     @Autowired private BeneficiaryRepository beneficiaryRepository;
     @Autowired(required = false) private EmailService emailService;
+    @Autowired private SecurityLogRepository securityLogRepository;
+    @Autowired private PasswordEncoder passwordEncoder;
 
     // ── Dashboard ────────────────────────────────────────────
     @GetMapping("/dashboard")
@@ -81,6 +85,7 @@ public class CustomerController {
     @PostMapping("/transfer")
     public String doTransfer(@RequestParam String toAccount, @RequestParam String transferType,
                              @RequestParam double amount, @RequestParam(required=false) String remarks,
+                             @RequestParam String tPin, HttpServletRequest request,
                              HttpSession session, Model model) {
         if (!ok(session)) return "redirect:/login";
         Customer u = user(session);
@@ -94,6 +99,30 @@ public class CustomerController {
         if (toAccount.length() != 16) { model.addAttribute("error","Account number must be 16 digits."); return "transfer"; }
         if (senderAccount == null) { model.addAttribute("error","Sender account not found."); return "transfer"; }
         if (senderAccount.getBalance() < amount) { model.addAttribute("error","Insufficient balance."); return "transfer"; }
+
+        // T-PIN Validation
+        if (tPin == null || tPin.isEmpty()) {
+            model.addAttribute("error", "Transaction PIN (T-PIN) is required.");
+            return "transfer";
+        }
+        if (senderAccount.gettPin() == null || !passwordEncoder.matches(tPin, senderAccount.gettPin())) {
+            model.addAttribute("error", "Invalid Transaction PIN (T-PIN).");
+            return "transfer";
+        }
+
+        // Card Control Checks
+        if ("BLOCKED".equalsIgnoreCase(senderAccount.getCardStatus())) {
+            model.addAttribute("error", "Transaction declined: Debit card is blocked.");
+            return "transfer";
+        }
+        if (!senderAccount.isOnlineEnabled()) {
+            model.addAttribute("error", "Transaction declined: Online transactions are disabled on this card.");
+            return "transfer";
+        }
+        if (amount > senderAccount.getPosLimit()) {
+            model.addAttribute("error", "Transaction declined: Amount exceeds card's daily POS limit (₹" + fmt(senderAccount.getPosLimit()) + ").");
+            return "transfer";
+        }
         
         // Check if destination account is internal
         Account receiverAccount = accountRepository.findByAccountNumber(toAccount);
@@ -136,9 +165,18 @@ public class CustomerController {
             emailService.sendTransferConfirmation(u.getEmail(), u.getName(), toAccount, amount, transferType);
         }
         
+        // Log successful transfer
+        SecurityLog log = new SecurityLog();
+        log.setCustomerId(u.getCustomerID());
+        log.setAction("FUND_TRANSFER");
+        log.setIpAddress(request.getRemoteAddr());
+        log.setUserAgent(request.getHeader("User-Agent"));
+        securityLogRepository.save(log);
+
         model.addAttribute("success","✅ ₹"+fmt(amount)+" transferred to "+toAccount+" via "+transferType+"!");
         return "transfer";
     }
+
 
     // ── UPI ──────────────────────────────────────────────────
     @GetMapping("/upi")
@@ -162,7 +200,8 @@ public class CustomerController {
 
     @PostMapping("/upi-send")
     public String upiSend(@RequestParam String toUpiId, @RequestParam double amount,
-                          @RequestParam(required=false) String note, HttpSession session, Model model) {
+                          @RequestParam(required=false) String note, @RequestParam String tPin,
+                          HttpServletRequest request, HttpSession session, Model model) {
         if (!ok(session)) return "redirect:/login";
         Customer u = user(session);
         Account senderAccount = accountRepository.findByCustomerId(u.getCustomerID());
@@ -172,6 +211,30 @@ public class CustomerController {
         if (amount <= 0) { model.addAttribute("error","Amount must be > 0."); return "upi"; }
         if (senderAccount == null) { model.addAttribute("error","Account not found."); return "upi"; }
         if (senderAccount.getBalance() < amount) { model.addAttribute("error","Insufficient balance."); return "upi"; }
+
+        // T-PIN Validation
+        if (tPin == null || tPin.isEmpty()) {
+            model.addAttribute("error", "Transaction PIN (T-PIN) is required.");
+            return "upi";
+        }
+        if (senderAccount.gettPin() == null || !passwordEncoder.matches(tPin, senderAccount.gettPin())) {
+            model.addAttribute("error", "Invalid Transaction PIN (T-PIN).");
+            return "upi";
+        }
+
+        // Card Control Checks
+        if ("BLOCKED".equalsIgnoreCase(senderAccount.getCardStatus())) {
+            model.addAttribute("error", "Transaction declined: Debit card is blocked.");
+            return "upi";
+        }
+        if (!senderAccount.isOnlineEnabled()) {
+            model.addAttribute("error", "Transaction declined: Online transactions are disabled on this card.");
+            return "upi";
+        }
+        if (amount > senderAccount.getPosLimit()) {
+            model.addAttribute("error", "Transaction declined: Amount exceeds card's daily POS/UPI limit (₹" + fmt(senderAccount.getPosLimit()) + ").");
+            return "upi";
+        }
 
         // Deduct balance
         senderAccount.setBalance(senderAccount.getBalance() - amount);
@@ -192,6 +255,14 @@ public class CustomerController {
         if (emailService != null) {
             emailService.sendTransferConfirmation(u.getEmail(), u.getName(), toUpiId, amount, "UPI");
         }
+
+        // Log successful transfer
+        SecurityLog log = new SecurityLog();
+        log.setCustomerId(u.getCustomerID());
+        log.setAction("UPI_TRANSFER");
+        log.setIpAddress(request.getRemoteAddr());
+        log.setUserAgent(request.getHeader("User-Agent"));
+        securityLogRepository.save(log);
 
         model.addAttribute("success","✅ ₹"+fmt(amount)+" sent to "+toUpiId+"!");
         return "upi";
@@ -377,25 +448,134 @@ public class CustomerController {
     @GetMapping("/currency")
     public String currencyPage(HttpSession session) { if (!ok(session)) return "redirect:/login"; return "currency"; }
 
-    // ── Debit Card ───────────────────────────────────────────
     @GetMapping("/card")
-    public String cardPage(HttpSession session) { if (!ok(session)) return "redirect:/login"; return "card"; }
+    public String cardPage(HttpSession session, Model model) {
+        if (!ok(session)) return "redirect:/login";
+        Customer u = user(session);
+        Account account = accountRepository.findByCustomerId(u.getCustomerID());
+        if (account == null) {
+            account = new Account();
+            account.setCustomerId(u.getCustomerID());
+            account.setAccountNumber(String.format("1001%012d", u.getCustomerID()));
+            account.setAccountType("SAVINGS");
+            account.setBalance(50000.00);
+            account.setStatus("ACTIVE");
+            account.setOpenedDate(LocalDate.now());
+            accountRepository.save(account);
+        }
+        model.addAttribute("account", account);
+        return "card";
+    }
 
     @PostMapping("/update-card-limits")
-    public String updateCardLimits(@RequestParam int atmLimit, @RequestParam int posLimit,
-                                   HttpSession session, Model model) {
+    public String updateCardLimits(@RequestParam double atmLimit, @RequestParam double posLimit,
+                                   HttpServletRequest request, HttpSession session, Model model) {
         if (!ok(session)) return "redirect:/login";
-        model.addAttribute("success","✅ ATM limit: ₹"+atmLimit+" | POS limit: ₹"+posLimit+" updated!");
+        Customer u = user(session);
+        Account account = accountRepository.findByCustomerId(u.getCustomerID());
+        if (account != null) {
+            account.setAtmLimit(atmLimit);
+            account.setPosLimit(posLimit);
+            accountRepository.save(account);
+
+            // Log limit update
+            SecurityLog log = new SecurityLog();
+            log.setCustomerId(u.getCustomerID());
+            log.setAction("CARD_LIMIT_UPDATE");
+            log.setIpAddress(request.getRemoteAddr());
+            log.setUserAgent(request.getHeader("User-Agent"));
+            securityLogRepository.save(log);
+
+            model.addAttribute("success", "✅ ATM limit: ₹" + fmt(atmLimit) + " | POS limit: ₹" + fmt(posLimit) + " updated!");
+        }
+        model.addAttribute("account", account);
         return "card";
     }
 
     @PostMapping("/change-pin")
     public String changePin(@RequestParam String currentPin, @RequestParam String newPin,
-                            @RequestParam String confirmPin, HttpSession session, Model model) {
+                            @RequestParam String confirmPin, HttpServletRequest request,
+                            HttpSession session, Model model) {
         if (!ok(session)) return "redirect:/login";
-        if (!newPin.equals(confirmPin)) { model.addAttribute("error","PINs do not match."); return "card"; }
-        if (newPin.length() != 4) { model.addAttribute("error","PIN must be 4 digits."); return "card"; }
-        model.addAttribute("success","✅ Card PIN changed successfully!");
+        Customer u = user(session);
+        Account account = accountRepository.findByCustomerId(u.getCustomerID());
+        model.addAttribute("account", account);
+
+        if (!newPin.equals(confirmPin)) { model.addAttribute("error", "PINs do not match."); return "card"; }
+        if (newPin.length() != 4) { model.addAttribute("error", "PIN must be 4 digits."); return "card"; }
+        if (account == null) { model.addAttribute("error", "Account not found."); return "card"; }
+
+        if (account.getCardPin() == null || !passwordEncoder.matches(currentPin, account.getCardPin())) {
+            model.addAttribute("error", "Current PIN is incorrect.");
+            return "card";
+        }
+
+        account.setCardPin(passwordEncoder.encode(newPin));
+        accountRepository.save(account);
+
+        // Log PIN change
+        SecurityLog log = new SecurityLog();
+        log.setCustomerId(u.getCustomerID());
+        log.setAction("CARD_PIN_CHANGE");
+        log.setIpAddress(request.getRemoteAddr());
+        log.setUserAgent(request.getHeader("User-Agent"));
+        securityLogRepository.save(log);
+
+        model.addAttribute("success", "✅ Card PIN changed successfully!");
+        return "card";
+    }
+
+    @PostMapping("/block-card")
+    public String blockCard(HttpServletRequest request, HttpSession session, Model model) {
+        if (!ok(session)) return "redirect:/login";
+        Customer u = user(session);
+        Account account = accountRepository.findByCustomerId(u.getCustomerID());
+        if (account != null) {
+            String newStatus = "ACTIVE".equalsIgnoreCase(account.getCardStatus()) ? "BLOCKED" : "ACTIVE";
+            account.setCardStatus(newStatus);
+            accountRepository.save(account);
+
+            // Log card block state change
+            SecurityLog log = new SecurityLog();
+            log.setCustomerId(u.getCustomerID());
+            log.setAction("CARD_STATUS_CHANGE");
+            log.setIpAddress(request.getRemoteAddr());
+            log.setUserAgent(request.getHeader("User-Agent"));
+            securityLogRepository.save(log);
+
+            model.addAttribute("success", "✅ Card has been " + ("BLOCKED".equalsIgnoreCase(newStatus) ? "temporarily blocked" : "unblocked") + "!");
+        }
+        model.addAttribute("account", account);
+        return "card";
+    }
+
+    @PostMapping("/toggle-card-feature")
+    public String toggleCardFeature(@RequestParam String feature, HttpServletRequest request,
+                                    HttpSession session, Model model) {
+        if (!ok(session)) return "redirect:/login";
+        Customer u = user(session);
+        Account account = accountRepository.findByCustomerId(u.getCustomerID());
+        if (account != null) {
+            if ("online".equalsIgnoreCase(feature)) {
+                account.setOnlineEnabled(!account.isOnlineEnabled());
+            } else if ("intl".equalsIgnoreCase(feature)) {
+                account.setIntlEnabled(!account.isIntlEnabled());
+            } else if ("contactless".equalsIgnoreCase(feature)) {
+                account.setContactlessEnabled(!account.isContactlessEnabled());
+            } else if ("atm".equalsIgnoreCase(feature)) {
+                account.setAtmEnabled(!account.isAtmEnabled());
+            }
+            accountRepository.save(account);
+
+            // Log log feature toggle
+            SecurityLog log = new SecurityLog();
+            log.setCustomerId(u.getCustomerID());
+            log.setAction("CARD_FEATURE_TOGGLE");
+            log.setIpAddress(request.getRemoteAddr());
+            log.setUserAgent(request.getHeader("User-Agent"));
+            securityLogRepository.save(log);
+        }
+        model.addAttribute("account", account);
         return "card";
     }
 
@@ -498,20 +678,53 @@ public class CustomerController {
     @GetMapping("/profile")
     public String profilePage(HttpSession session, Model model) {
         if (!ok(session)) return "redirect:/login";
-        model.addAttribute("user", session.getAttribute("user"));
+        Customer u = user(session);
+        List<SecurityLog> logs = securityLogRepository.findByCustomerIdOrderByCreatedAtDesc(u.getCustomerID());
+        if (logs.size() > 10) {
+            logs = logs.subList(0, 10);
+        }
+        model.addAttribute("user", u);
+        model.addAttribute("securityLogs", logs);
         return "profile";
     }
 
     @PostMapping("/change-password")
     public String changePassword(@RequestParam String currentPassword, @RequestParam String newPassword,
-                                 @RequestParam String confirmPassword, HttpSession session, Model model) {
+                                 @RequestParam String confirmPassword, HttpServletRequest request,
+                                 HttpSession session, Model model) {
         if (!ok(session)) return "redirect:/login";
         Customer u = user(session);
-        if (!u.getPassword().equals(currentPassword)) { model.addAttribute("error","Current password incorrect."); model.addAttribute("user",u); return "profile"; }
-        if (!newPassword.equals(confirmPassword)) { model.addAttribute("error","Passwords do not match."); model.addAttribute("user",u); return "profile"; }
-        if (newPassword.length() < 8) { model.addAttribute("error","Min 8 characters."); model.addAttribute("user",u); return "profile"; }
-        u.setPassword(newPassword); customerRepository.save(u); session.setAttribute("user",u);
-        model.addAttribute("success","✅ Password changed!"); model.addAttribute("user",u);
+        
+        List<SecurityLog> logs = securityLogRepository.findByCustomerIdOrderByCreatedAtDesc(u.getCustomerID());
+        if (logs.size() > 10) logs = logs.subList(0, 10);
+        model.addAttribute("securityLogs", logs);
+        model.addAttribute("user", u);
+
+        if (u.getPassword() == null || !passwordEncoder.matches(currentPassword, u.getPassword())) {
+            model.addAttribute("error", "Current password incorrect.");
+            return "profile";
+        }
+        if (!newPassword.equals(confirmPassword)) { model.addAttribute("error", "Passwords do not match."); return "profile"; }
+        if (newPassword.length() < 8) { model.addAttribute("error", "Min 8 characters."); return "profile"; }
+        
+        u.setPassword(passwordEncoder.encode(newPassword));
+        customerRepository.save(u);
+        session.setAttribute("user", u);
+
+        // Log password change
+        SecurityLog log = new SecurityLog();
+        log.setCustomerId(u.getCustomerID());
+        log.setAction("PASSWORD_CHANGE");
+        log.setIpAddress(request.getRemoteAddr());
+        log.setUserAgent(request.getHeader("User-Agent"));
+        securityLogRepository.save(log);
+
+        // Reload logs
+        logs = securityLogRepository.findByCustomerIdOrderByCreatedAtDesc(u.getCustomerID());
+        if (logs.size() > 10) logs = logs.subList(0, 10);
+        model.addAttribute("securityLogs", logs);
+
+        model.addAttribute("success", "✅ Password changed!");
         return "profile";
     }
 
@@ -520,16 +733,136 @@ public class CustomerController {
                                 @RequestParam(required=false) String address, HttpSession session, Model model) {
         if (!ok(session)) return "redirect:/login";
         Customer u = user(session);
-        if (phone.length() != 10) { model.addAttribute("error","Phone must be 10 digits."); model.addAttribute("user",u); return "profile"; }
+        
+        List<SecurityLog> logs = securityLogRepository.findByCustomerIdOrderByCreatedAtDesc(u.getCustomerID());
+        if (logs.size() > 10) logs = logs.subList(0, 10);
+        model.addAttribute("securityLogs", logs);
+        model.addAttribute("user", u);
+
+        if (phone.length() != 10) { model.addAttribute("error", "Phone must be 10 digits."); return "profile"; }
         u.setName(name); u.setPhone(phone); u.setAddress(address);
-        customerRepository.save(u); session.setAttribute("user",u);
-        model.addAttribute("success","✅ Profile updated!"); model.addAttribute("user",u);
+        customerRepository.save(u);
+        session.setAttribute("user", u);
+        
+        model.addAttribute("success", "✅ Profile updated!");
+        return "profile";
+    }
+
+    @PostMapping("/update-tpin")
+    public String updateTPin(@RequestParam String currentPin, @RequestParam String newPin,
+                             @RequestParam String confirmPin, HttpServletRequest request,
+                             HttpSession session, Model model) {
+        if (!ok(session)) return "redirect:/login";
+        Customer u = user(session);
+        Account account = accountRepository.findByCustomerId(u.getCustomerID());
+        
+        List<SecurityLog> logs = securityLogRepository.findByCustomerIdOrderByCreatedAtDesc(u.getCustomerID());
+        if (logs.size() > 10) logs = logs.subList(0, 10);
+        model.addAttribute("securityLogs", logs);
+        model.addAttribute("user", u);
+
+        if (!newPin.equals(confirmPin)) { model.addAttribute("error", "T-PINs do not match."); return "profile"; }
+        if (newPin.length() != 4) { model.addAttribute("error", "T-PIN must be 4 digits."); return "profile"; }
+        if (account == null) { model.addAttribute("error", "Account not found."); return "profile"; }
+
+        if (account.gettPin() != null && !passwordEncoder.matches(currentPin, account.gettPin())) {
+            model.addAttribute("error", "Current Transaction PIN is incorrect.");
+            return "profile";
+        }
+
+        account.settPin(passwordEncoder.encode(newPin));
+        accountRepository.save(account);
+
+        // Log TPIN update
+        SecurityLog log = new SecurityLog();
+        log.setCustomerId(u.getCustomerID());
+        log.setAction("TPIN_CHANGE");
+        log.setIpAddress(request.getRemoteAddr());
+        log.setUserAgent(request.getHeader("User-Agent"));
+        securityLogRepository.save(log);
+
+        // Reload logs
+        logs = securityLogRepository.findByCustomerIdOrderByCreatedAtDesc(u.getCustomerID());
+        if (logs.size() > 10) logs = logs.subList(0, 10);
+        model.addAttribute("securityLogs", logs);
+
+        model.addAttribute("success", "✅ Transaction PIN (T-PIN) updated successfully!");
         return "profile";
     }
 
     // ── Statement & Export ───────────────────────────────────
     @GetMapping("/statement")
-    public String statement(HttpSession session) { if (!ok(session)) return "redirect:/login"; return "statement"; }
+    public String statement(
+            @RequestParam(required = false) String from,
+            @RequestParam(required = false) String to,
+            HttpSession session,
+            Model model) {
+        if (!ok(session)) return "redirect:/login";
+        Customer u = user(session);
+        Account account = accountRepository.findByCustomerId(u.getCustomerID());
+        if (account == null) {
+            account = new Account();
+            account.setCustomerId(u.getCustomerID());
+            account.setAccountNumber(String.format("1001%012d", u.getCustomerID()));
+            account.setAccountType("SAVINGS");
+            account.setBalance(50000.00);
+            account.setStatus("ACTIVE");
+            account.setOpenedDate(LocalDate.now());
+            accountRepository.save(account);
+        }
+
+        List<Transaction> transactions = transactionRepository.findByFromCustomerIdOrderByCreatedAtDesc(u.getCustomerID());
+        
+        LocalDate fromDate = null;
+        LocalDate toDate = null;
+        if (from != null && !from.trim().isEmpty()) {
+            try {
+                fromDate = LocalDate.parse(from);
+            } catch (Exception e) {}
+        }
+        if (to != null && !to.trim().isEmpty()) {
+            try {
+                toDate = LocalDate.parse(to);
+            } catch (Exception e) {}
+        }
+
+        java.util.ArrayList<Transaction> filteredTransactions = new java.util.ArrayList<>();
+        double totalDebited = 0.0;
+        double totalCredited = 0.0;
+
+        for (Transaction tx : transactions) {
+            LocalDate txDate = tx.getCreatedAt().toLocalDate();
+            boolean keep = true;
+            if (fromDate != null && txDate.isBefore(fromDate)) {
+                keep = false;
+            }
+            if (toDate != null && txDate.isAfter(toDate)) {
+                keep = false;
+            }
+            if (keep) {
+                filteredTransactions.add(tx);
+                if ("DEBIT".equalsIgnoreCase(tx.getType())) {
+                    totalDebited += tx.getAmount();
+                } else if ("CREDIT".equalsIgnoreCase(tx.getType())) {
+                    totalCredited += tx.getAmount();
+                }
+            }
+        }
+
+        double closingBalance = account.getBalance();
+        double openingBalance = closingBalance - totalCredited + totalDebited;
+
+        model.addAttribute("account", account);
+        model.addAttribute("transactions", filteredTransactions);
+        model.addAttribute("from", from);
+        model.addAttribute("to", to);
+        model.addAttribute("totalDebited", totalDebited);
+        model.addAttribute("totalCredited", totalCredited);
+        model.addAttribute("openingBalance", openingBalance);
+        model.addAttribute("closingBalance", closingBalance);
+
+        return "statement";
+    }
 
     // ── Notifications ────────────────────────────────────────
     @GetMapping("/notifications")

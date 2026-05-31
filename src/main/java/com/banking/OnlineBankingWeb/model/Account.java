@@ -33,6 +33,42 @@ public class Account {
     @Column(name = "OpenedDate")
     private LocalDate openedDate;
 
+    @Column(name = "t_pin")
+    private String tPin;
+
+    @Column(name = "card_pin")
+    private String cardPin;
+
+    @Column(name = "card_number")
+    private String cardNumber;
+
+    @Column(name = "card_cvv")
+    private String cardCvv;
+
+    @Column(name = "card_expiry")
+    private String cardExpiry;
+
+    @Column(name = "card_status")
+    private String cardStatus; // ACTIVE, BLOCKED
+
+    @Column(name = "atm_limit")
+    private double atmLimit = 10000.00;
+
+    @Column(name = "pos_limit")
+    private double posLimit = 50000.00;
+
+    @Column(name = "online_enabled")
+    private boolean onlineEnabled = true;
+
+    @Column(name = "intl_enabled")
+    private boolean intlEnabled = false;
+
+    @Column(name = "contactless_enabled")
+    private boolean contactlessEnabled = true;
+
+    @Column(name = "atm_enabled")
+    private boolean atmEnabled = true;
+
     @PrePersist
     public void prePersist() {
         if (this.openedDate == null) {
@@ -40,6 +76,26 @@ public class Account {
         }
         if (this.status == null) {
             this.status = "ACTIVE";
+        }
+        if (this.cardNumber == null) {
+            int random1 = (int)(Math.random() * 9000) + 1000;
+            int random2 = (int)(Math.random() * 9000) + 1000;
+            this.cardNumber = String.format("4312-8877-%04d-%04d", random1, random2);
+        }
+        if (this.cardCvv == null) {
+            this.cardCvv = String.format("%03d", (int)(Math.random() * 900) + 100);
+        }
+        if (this.cardExpiry == null) {
+            int month = LocalDate.now().getMonthValue();
+            int year = (LocalDate.now().getYear() + 5) % 100;
+            this.cardExpiry = String.format("%02d/%02d", month, year);
+        }
+        if (this.cardStatus == null) {
+            this.cardStatus = "ACTIVE";
+        }
+        if (this.cardPin == null) {
+            // default '1234'
+            this.cardPin = "$2a$10$vD2pG40.Dbe.3Qp/y7iTaei02b2/JjX/Wl87s73dJm9CplH.N7tJ2";
         }
     }
 
@@ -67,4 +123,40 @@ public class Account {
 
     public LocalDate getOpenedDate() { return openedDate; }
     public void setOpenedDate(LocalDate openedDate) { this.openedDate = openedDate; }
+
+    public String gettPin() { return tPin; }
+    public void settPin(String tPin) { this.tPin = tPin; }
+
+    public String getCardNumber() { return cardNumber; }
+    public void setCardNumber(String cardNumber) { this.cardNumber = cardNumber; }
+
+    public String getCardCvv() { return cardCvv; }
+    public void setCardCvv(String cardCvv) { this.cardCvv = cardCvv; }
+
+    public String getCardExpiry() { return cardExpiry; }
+    public void setCardExpiry(String cardExpiry) { this.cardExpiry = cardExpiry; }
+
+    public String getCardStatus() { return cardStatus; }
+    public void setCardStatus(String cardStatus) { this.cardStatus = cardStatus; }
+
+    public double getAtmLimit() { return atmLimit; }
+    public void setAtmLimit(double atmLimit) { this.atmLimit = atmLimit; }
+
+    public double getPosLimit() { return posLimit; }
+    public void setPosLimit(double posLimit) { this.posLimit = posLimit; }
+
+    public boolean isOnlineEnabled() { return onlineEnabled; }
+    public void setOnlineEnabled(boolean onlineEnabled) { this.onlineEnabled = onlineEnabled; }
+
+    public boolean isIntlEnabled() { return intlEnabled; }
+    public void setIntlEnabled(boolean intlEnabled) { this.intlEnabled = intlEnabled; }
+
+    public boolean isContactlessEnabled() { return contactlessEnabled; }
+    public void setContactlessEnabled(boolean contactlessEnabled) { this.contactlessEnabled = contactlessEnabled; }
+
+    public boolean isAtmEnabled() { return atmEnabled; }
+    public void setAtmEnabled(boolean atmEnabled) { this.atmEnabled = atmEnabled; }
+
+    public String getCardPin() { return cardPin; }
+    public void setCardPin(String cardPin) { this.cardPin = cardPin; }
 }

@@ -3,20 +3,28 @@ package com.banking.OnlineBankingWeb.controller;
 import com.banking.OnlineBankingWeb.model.Customer;
 import com.banking.OnlineBankingWeb.repository.CustomerRepository;
 import com.banking.OnlineBankingWeb.service.EmailService;
+import com.banking.OnlineBankingWeb.model.SecurityLog;
+import com.banking.OnlineBankingWeb.repository.SecurityLogRepository;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import java.security.SecureRandom;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Random;
 
 @Controller
 public class AuthController {
 
     @Autowired private CustomerRepository customerRepository;
     @Autowired(required = false) private EmailService emailService;
+    @Autowired private PasswordEncoder passwordEncoder;
+    @Autowired private SecurityLogRepository securityLogRepository;
+
+    private final SecureRandom secureRandom = new SecureRandom();
 
     private final Map<String, String> otpStore = new HashMap<>();
     private final Map<String, String> resetTokens = new HashMap<>();
@@ -32,24 +40,36 @@ public class AuthController {
 
     @PostMapping("/login")
     public String doLogin(@RequestParam String email, @RequestParam String password,
-                          HttpSession session, Model model) {
+                          HttpServletRequest request, HttpSession session, Model model) {
         Customer customer = customerRepository.findByEmail(email);
         if (customer == null) { model.addAttribute("error", "No account found with this email."); return "login"; }
         if (customer.getStatus().equals("LOCKED")) { model.addAttribute("error", "Account locked. Use Forgot Password to unlock."); return "login"; }
         if (customer.getStatus().equals("PENDING")) { model.addAttribute("error", "Account pending admin approval. Please wait."); return "login"; }
-        if (!customer.getPassword().equals(password)) {
+        
+        if (!passwordMatches(customer, password)) {
             customer.setFailedLogins(customer.getFailedLogins() + 1);
+            SecurityLog log = new SecurityLog();
+            log.setCustomerId(customer.getCustomerID());
+            log.setIpAddress(request.getRemoteAddr());
+            log.setUserAgent(request.getHeader("User-Agent"));
+            
             if (customer.getFailedLogins() >= 3) {
                 customer.setStatus("LOCKED");
                 customerRepository.save(customer);
+                log.setAction("ACCOUNT_LOCKED");
+                securityLogRepository.save(log);
                 model.addAttribute("error", "Account locked after 3 failed attempts. Use Forgot Password.");
             } else {
                 customerRepository.save(customer);
+                log.setAction("LOGIN_FAILED");
+                securityLogRepository.save(log);
                 model.addAttribute("error", "Invalid password. " + (3 - customer.getFailedLogins()) + " attempt(s) remaining.");
             }
             return "login";
         }
+        
         customer.setFailedLogins(0);
+        upgradeLegacyPasswordIfNeeded(customer, password);
         customerRepository.save(customer);
         String otp = generateOTP();
         otpStore.put(email, otp);
@@ -62,7 +82,19 @@ public class AuthController {
     }
 
     @GetMapping("/logout")
-    public String logout(HttpSession session) { session.invalidate(); return "redirect:/login"; }
+    public String logout(HttpServletRequest request, HttpSession session) {
+        Customer customer = (Customer) session.getAttribute("user");
+        if (customer != null) {
+            SecurityLog log = new SecurityLog();
+            log.setCustomerId(customer.getCustomerID());
+            log.setAction("LOGOUT");
+            log.setIpAddress(request.getRemoteAddr());
+            log.setUserAgent(request.getHeader("User-Agent"));
+            securityLogRepository.save(log);
+        }
+        session.invalidate();
+        return "redirect:/login";
+    }
 
     @GetMapping("/forgot-password")
     public String forgotPage() { return "forgot-password"; }
@@ -83,7 +115,7 @@ public class AuthController {
 
     @PostMapping("/verify-otp")
     public String verifyOtp(@RequestParam String email, @RequestParam String otp,
-                            @RequestParam String type, HttpSession session, Model model) {
+                            @RequestParam String type, HttpServletRequest request, HttpSession session, Model model) {
         String stored = otpStore.get(email);
         if (stored == null || !stored.equals(otp)) {
             model.addAttribute("error", "Invalid or expired OTP. Please try again.");
@@ -94,6 +126,15 @@ public class AuthController {
         if (type.equals("2fa")) {
             Customer customer = (Customer) session.getAttribute("pending_user");
             if (customer == null) return "redirect:/login";
+            
+            // Log login success
+            SecurityLog log = new SecurityLog();
+            log.setCustomerId(customer.getCustomerID());
+            log.setAction("LOGIN_SUCCESS");
+            log.setIpAddress(request.getRemoteAddr());
+            log.setUserAgent(request.getHeader("User-Agent"));
+            securityLogRepository.save(log);
+
             session.setAttribute("user", customer);
             session.removeAttribute("pending_user");
             return customer.getRole().equals("ADMIN") ? "redirect:/admin/dashboard" : "redirect:/customer/dashboard";
@@ -118,18 +159,48 @@ public class AuthController {
 
     @PostMapping("/reset-password")
     public String resetPassword(@RequestParam String email, @RequestParam String token,
-                                @RequestParam String password, @RequestParam String confirmPassword, Model model) {
+                                @RequestParam String password, @RequestParam String confirmPassword, 
+                                HttpServletRequest request, Model model) {
         String stored = resetTokens.get(email);
         if (stored == null || !stored.equals(token)) { model.addAttribute("error", "Invalid reset link."); return "reset-password"; }
         if (!password.equals(confirmPassword)) { model.addAttribute("error", "Passwords do not match."); model.addAttribute("email", email); model.addAttribute("token", token); return "reset-password"; }
         if (password.length() < 8) { model.addAttribute("error", "Password must be at least 8 characters."); model.addAttribute("email", email); model.addAttribute("token", token); return "reset-password"; }
         Customer customer = customerRepository.findByEmail(email);
         if (customer != null) {
-            customer.setPassword(password); customer.setStatus("ACTIVE"); customer.setFailedLogins(0);
+            customer.setPassword(passwordEncoder.encode(password)); customer.setStatus("ACTIVE"); customer.setFailedLogins(0);
             customerRepository.save(customer); resetTokens.remove(email);
+            
+            // Log password reset
+            SecurityLog log = new SecurityLog();
+            log.setCustomerId(customer.getCustomerID());
+            log.setAction("PASSWORD_RESET");
+            log.setIpAddress(request.getRemoteAddr());
+            log.setUserAgent(request.getHeader("User-Agent"));
+            securityLogRepository.save(log);
         }
         return "redirect:/login?success=Password+reset+successfully!+Please+login.";
     }
 
-    private String generateOTP() { return String.format("%06d", new Random().nextInt(999999)); }
+    private String generateOTP() { return String.format("%06d", secureRandom.nextInt(1_000_000)); }
+
+    private boolean passwordMatches(Customer customer, String rawPassword) {
+        String storedPassword = customer.getPassword();
+        if (storedPassword == null) {
+            return false;
+        }
+        if (isBCrypt(storedPassword)) {
+            return passwordEncoder.matches(rawPassword, storedPassword);
+        }
+        return storedPassword.equals(rawPassword);
+    }
+
+    private void upgradeLegacyPasswordIfNeeded(Customer customer, String rawPassword) {
+        if (customer.getPassword() != null && !isBCrypt(customer.getPassword())) {
+            customer.setPassword(passwordEncoder.encode(rawPassword));
+        }
+    }
+
+    private boolean isBCrypt(String password) {
+        return password.startsWith("$2a$") || password.startsWith("$2b$") || password.startsWith("$2y$");
+    }
 }

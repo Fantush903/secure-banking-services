@@ -154,6 +154,57 @@
         </form>
     </div>
 
+    <!-- Change T-PIN -->
+    <div class="full-card">
+        <h3>🔢 Change Transaction PIN (T-PIN)</h3>
+        <form method="post" action="/customer/update-tpin">
+            <div class="form-grid">
+                <div class="input-group">
+                    <label>Current T-PIN (Default: 1234)</label>
+                    <input type="password" name="currentPin" placeholder="••••" maxlength="4" required/>
+                </div>
+                <div class="input-group">
+                    <label>New T-PIN (4 digits)</label>
+                    <input type="password" name="newPin" placeholder="••••" maxlength="4" required/>
+                </div>
+                <div class="input-group">
+                    <label>Confirm New T-PIN</label>
+                    <input type="password" name="confirmPin" placeholder="••••" maxlength="4" required/>
+                </div>
+            </div>
+            <div class="actions">
+                <button type="submit" class="btn btn-primary">Update T-PIN</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Security Activity Logs -->
+    <div class="full-card">
+        <h3>🛡️ Recent Security Activity (Last 10 Logs)</h3>
+        <div th:if="${securityLogs == null or securityLogs.isEmpty()}" style="text-align:center; padding: 20px; color: #999;">
+            No recent activity logged.
+        </div>
+        <table th:if="${securityLogs != null and !securityLogs.isEmpty()}" style="width: 100%; border-collapse: collapse; margin-top: 10px;">
+            <thead>
+                <tr style="background: #fafafa; border-bottom: 1px solid #f0f0f0;">
+                    <th style="padding: 12px; text-align: left; font-size: 11px; color: #999; font-weight: 700; text-transform: uppercase;">Date & Time</th>
+                    <th style="padding: 12px; text-align: left; font-size: 11px; color: #999; font-weight: 700; text-transform: uppercase;">Action / Event</th>
+                    <th style="padding: 12px; text-align: left; font-size: 11px; color: #999; font-weight: 700; text-transform: uppercase;">IP Address</th>
+                    <th style="padding: 12px; text-align: left; font-size: 11px; color: #999; font-weight: 700; text-transform: uppercase;">Device / Browser</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="log : ${securityLogs}" style="border-bottom: 1px solid #f8f8f8;">
+                    <td style="padding: 12px; font-size: 13px; color: #555;" th:text="${#temporals.format(log.createdAt, 'dd-MM-yyyy HH:mm')}">Just now</td>
+                    <td style="padding: 12px; font-size: 13px; font-weight: 600; color: #1a237e;" th:text="${log.action}">LOGIN_SUCCESS</td>
+                    <td style="padding: 12px; font-size: 13px; color: #555;" th:text="${log.ipAddress}">127.0.0.1</td>
+                    <td style="padding: 12px; font-size: 12px; color: #888; max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" 
+                        th:text="${log.userAgent}" th:title="${log.userAgent}">Chrome / Windows</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
 </div>
 </body>
 </html>

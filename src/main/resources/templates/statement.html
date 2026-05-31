@@ -108,22 +108,24 @@
                     </div>
                     <div class="stmt-info-item">
                         <div class="stmt-info-label">Account Number</div>
-                        <div class="stmt-info-value">1001-0000-0001</div>
+                        <div class="stmt-info-value" th:text="${account.accountNumber}">1001-0000-0001</div>
                     </div>
                     <div class="stmt-info-item">
                         <div class="stmt-info-label">Available Balance</div>
-                        <div class="stmt-info-value">₹ 50,000.00</div>
+                        <div class="stmt-info-value" th:text="'₹ ' + ${#numbers.formatDecimal(account.balance, 1, 2, 'POINT')}">₹ 50,000.00</div>
                     </div>
                 </div>
             </div>
 
             <!-- Filters -->
-            <div class="filter-bar">
-                <input type="date" id="fromDate"/>
-                <input type="date" id="toDate"/>
-                <button class="btn-filter">🔍 Filter</button>
-                <button class="btn-print" onclick="window.print()">🖨️ Print / Download</button>
-            </div>
+            <form method="get" action="/customer/statement">
+                <div class="filter-bar">
+                    <input type="date" name="from" id="fromDate" th:value="${from}"/>
+                    <input type="date" name="to" id="toDate" th:value="${to}"/>
+                    <button type="submit" class="btn-filter">🔍 Filter</button>
+                    <button type="button" class="btn-print" onclick="window.print()">🖨️ Print / Download</button>
+                </div>
+            </form>
 
             <!-- Table -->
             <table>
@@ -137,13 +139,15 @@
                     <th>Balance</th>
                 </tr>
                 <tr th:each="tx : ${transactions}">
-                    <td th:text="${tx.date}">—</td>
-                    <td th:text="${tx.id}">—</td>
+                    <td th:text="${#temporals.format(tx.createdAt, 'dd-MM-yyyy HH:mm')}">—</td>
+                    <td th:text="${tx.transactionId}">—</td>
                     <td th:text="${tx.description}">—</td>
-                    <td><span class="badge badge-blue" th:text="${tx.type}">—</span></td>
-                    <td class="amount-debit" th:text="${tx.type == 'DEBIT' ? '₹ ' + tx.amount : '—'}">—</td>
-                    <td class="amount-credit" th:text="${tx.type == 'CREDIT' ? '₹ ' + tx.amount : '—'}">—</td>
-                    <td>₹ 50,000.00</td>
+                    <td>
+                        <span class="badge" th:classappend="${tx.type == 'CREDIT' ? 'badge-green' : 'badge-red'}" th:text="${tx.type}">—</span>
+                    </td>
+                    <td class="amount-debit" th:text="${tx.type == 'DEBIT' ? '₹ ' + #numbers.formatDecimal(tx.amount, 1, 2, 'POINT') : '—'}">—</td>
+                    <td class="amount-credit" th:text="${tx.type == 'CREDIT' ? '₹ ' + #numbers.formatDecimal(tx.amount, 1, 2, 'POINT') : '—'}">—</td>
+                    <td th:text="'₹ ' + ${#numbers.formatDecimal(tx.balanceAfter, 1, 2, 'POINT')}">₹ 50,000.00</td>
                 </tr>
             </table>
 
@@ -155,10 +159,10 @@
             </div>
 
             <div class="summary-bar">
-                <span>Opening Balance: <span style="color:#1a237e">₹ 50,000.00</span></span>
-                <span>Total Debit: <span style="color:#c62828">₹ 0.00</span></span>
-                <span>Total Credit: <span style="color:#2e7d32">₹ 0.00</span></span>
-                <span>Closing Balance: <span style="color:#1a237e">₹ 50,000.00</span></span>
+                <span>Opening Balance: <span style="color:#1a237e" th:text="'₹ ' + ${#numbers.formatDecimal(openingBalance, 1, 2, 'POINT')}">₹ 50,000.00</span></span>
+                <span>Total Debit: <span style="color:#c62828" th:text="'₹ ' + ${#numbers.formatDecimal(totalDebited, 1, 2, 'POINT')}">₹ 0.00</span></span>
+                <span>Total Credit: <span style="color:#2e7d32" th:text="'₹ ' + ${#numbers.formatDecimal(totalCredited, 1, 2, 'POINT')}">₹ 0.00</span></span>
+                <span>Closing Balance: <span style="color:#1a237e" th:text="'₹ ' + ${#numbers.formatDecimal(closingBalance, 1, 2, 'POINT')}">₹ 50,000.00</span></span>
             </div>
         </div>
     </div>
@@ -166,9 +170,16 @@
 <script>
     document.getElementById('stmtDate').textContent = 'Generated: ' + new Date().toLocaleDateString('en-IN', {day:'2-digit', month:'long', year:'numeric'});
     const today = new Date().toISOString().split('T')[0];
-    document.getElementById('toDate').value = today;
-    const from = new Date(); from.setMonth(from.getMonth()-1);
-    document.getElementById('fromDate').value = from.toISOString().split('T')[0];
+    const toDateInput = document.getElementById('toDate');
+    if (!toDateInput.value) {
+        toDateInput.value = today;
+    }
+    const fromDateInput = document.getElementById('fromDate');
+    if (!fromDateInput.value) {
+        const from = new Date();
+        from.setMonth(from.getMonth()-1);
+        fromDateInput.value = from.toISOString().split('T')[0];
+    }
 </script>
 </body>
 </html>
