@@ -53,6 +53,20 @@ public class EmailService {
         sendEmail(toEmail, subject, body);
     }
 
+    // ─── Sync Email Sending Test (Throws Exception for Debugging) ───
+    public void testEmailSend(String to) throws Exception {
+        if (mailSender == null) {
+            throw new Exception("JavaMailSender is null. Check spring-boot-starter-mail dependency in pom.xml.");
+        }
+        MimeMessage message = mailSender.createMimeMessage();
+        MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+        helper.setFrom(fromEmail != null ? fromEmail : "noreply@securebank.com", "SecureBank");
+        helper.setTo(to);
+        helper.setSubject("SecureBank SMTP Test Connection");
+        helper.setText("This is a test email sent from the SecureBank configuration tool. Connection is working!", false);
+        mailSender.send(message);
+    }
+
     // ─── Core Send Method ────────────────────────────────────
     private void sendEmail(String to, String subject, String htmlBody) {
         if (mailSender == null || fromEmail == null || fromEmail.isBlank()) {

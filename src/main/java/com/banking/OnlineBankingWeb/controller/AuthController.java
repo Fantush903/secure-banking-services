@@ -204,4 +204,24 @@ public class AuthController {
     private boolean isBCrypt(String password) {
         return password.startsWith("$2a$") || password.startsWith("$2b$") || password.startsWith("$2y$");
     }
+
+    // ─── SMTP Email Configuration Diagnostic Endpoint ───────────
+    @GetMapping("/api/test-email")
+    @ResponseBody
+    public String testEmail(@RequestParam(defaultValue = "fantusharyanfkb@gmail.com") String to) {
+        if (emailService == null) {
+            return "<h3>Error: EmailService is null!</h3> Check Spring Boot configuration.";
+        }
+        try {
+            emailService.testEmailSend(to);
+            return "<h3>Success!</h3> Test email successfully sent to " + to + ". Check your inbox/spam folders.";
+        } catch (Exception e) {
+            java.io.StringWriter sw = new java.io.StringWriter();
+            java.io.PrintWriter pw = new java.io.PrintWriter(sw);
+            e.printStackTrace(pw);
+            return "<h3>Exception Occurred:</h3> <p style='color:red; font-weight:bold;'>" + e.getMessage() + "</p>"
+                   + "<pre style='background:#f4f4f4; padding:15px; border-radius:8px; border:1px solid #ddd;'>" 
+                   + sw.toString() + "</pre>";
+        }
+    }
 }
