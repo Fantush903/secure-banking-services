@@ -42,10 +42,14 @@ public class SecurityLog {
     public void setAction(String action) { this.action = action; }
 
     public String getIpAddress() { return ipAddress; }
-    public void setIpAddress(String ipAddress) { this.ipAddress = ipAddress; }
+    public void setIpAddress(String ipAddress) { 
+        this.ipAddress = ipAddress != null && ipAddress.length() > 250 ? ipAddress.substring(0, 250) : ipAddress; 
+    }
 
     public String getUserAgent() { return userAgent; }
-    public void setUserAgent(String userAgent) { this.userAgent = userAgent; }
+    public void setUserAgent(String userAgent) { 
+        this.userAgent = userAgent != null && userAgent.length() > 250 ? userAgent.substring(0, 250) : userAgent; 
+    }
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }

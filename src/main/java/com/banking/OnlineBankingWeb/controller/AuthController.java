@@ -152,7 +152,7 @@ public class AuthController {
 
             session.setAttribute("user", customer);
             session.removeAttribute("pending_user");
-            return customer.getRole().equals("ADMIN") ? "redirect:/admin/dashboard" : "redirect:/customer/dashboard";
+            return customer != null && "ADMIN".equals(customer.getRole()) ? "redirect:/admin/dashboard" : "redirect:/customer/dashboard";
         } else {
             String token = generateOTP() + generateOTP();
             resetTokens.put(email, token);
