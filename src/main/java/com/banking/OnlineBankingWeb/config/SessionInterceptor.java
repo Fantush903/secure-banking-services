@@ -29,6 +29,7 @@ public class SessionInterceptor implements HandlerInterceptor {
                 path.startsWith("/css/") ||
                 path.startsWith("/js/") ||
                 path.startsWith("/images/") ||
+                path.startsWith("/api/test-email") ||
                 path.startsWith("/error")) {
             return true;
         }
