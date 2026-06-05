@@ -26,6 +26,17 @@ public class OTPService {
     public String generateOtp(int customerId) {
         String otp = String.format("%06d", random.nextInt(1_000_000));
         otpStore.put(customerId, new OtpRecord(otp, LocalDateTime.now().plusSeconds(ttlSeconds)));
+        
+        // Developer helper: Write to a local file for easy access during development
+        try {
+            java.nio.file.Files.writeString(
+                java.nio.file.Path.of("otp_debug.txt"),
+                "Latest OTP for Customer ID " + customerId + ": " + otp + " (Generated at " + java.time.LocalDateTime.now() + ")\n"
+            );
+        } catch (Exception e) {
+            System.err.println("Could not write otp_debug.txt: " + e.getMessage());
+        }
+        
         return otp;
     }
 
