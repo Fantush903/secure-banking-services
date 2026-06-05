@@ -17,14 +17,13 @@ public class EmailService {
     @Value("${spring.mail.username:noreply@securebank.com}")
     private String fromEmail;
 
-    // ─── Send OTP Email ──────────────────────────────────────
-    @Async
-    public void sendOTP(String toEmail, String otp, String type) {
+    // ─── Send OTP Email (Synchronous — returns true if email sent successfully) ──
+    public boolean sendOTP(String toEmail, String otp, String type) {
         String subject = type.equals("2fa") ?
                 "SecureBank — Login OTP" : "SecureBank — Password Reset OTP";
 
         String body = buildOTPEmail(toEmail, otp, type);
-        sendEmail(toEmail, subject, body);
+        return sendEmail(toEmail, subject, body);
     }
 
     // ─── Send Welcome Email ──────────────────────────────────
@@ -67,15 +66,18 @@ public class EmailService {
         mailSender.send(message);
     }
 
-    // ─── Core Send Method ────────────────────────────────────
-    private void sendEmail(String to, String subject, String htmlBody) {
-        if (mailSender == null || fromEmail == null || fromEmail.isBlank()) {
-            // Fallback: print to console if mail not configured
-            System.out.println("=== EMAIL TO: " + to + " ===");
+    // ─── Core Send Method (returns true on success) ──────────
+    private boolean sendEmail(String to, String subject, String htmlBody) {
+        if (mailSender == null) {
+            System.err.println("❌ EMAIL FAILED: JavaMailSender is NULL — spring-boot-starter-mail may be missing or SMTP config is invalid.");
+            System.out.println("=== FALLBACK EMAIL TO: " + to + " ===");
             System.out.println("Subject: " + subject);
-            System.out.println("Body: " + htmlBody.replaceAll("<[^>]*>", ""));
             System.out.println("=====================================");
-            return;
+            return false;
+        }
+        if (fromEmail == null || fromEmail.isBlank()) {
+            System.err.println("❌ EMAIL FAILED: fromEmail is blank — MAIL_USERNAME env var not set.");
+            return false;
         }
         try {
             MimeMessage message = mailSender.createMimeMessage();
@@ -85,9 +87,15 @@ public class EmailService {
             helper.setSubject(subject);
             helper.setText(htmlBody, true);
             mailSender.send(message);
-            System.out.println("✅ Email sent to: " + to);
+            System.out.println("✅ Email sent successfully to: " + to + " | Subject: " + subject);
+            return true;
         } catch (Exception e) {
-            System.err.println("❌ Email failed: " + e.getMessage());
+            System.err.println("❌ EMAIL FAILED to " + to + ": " + e.getClass().getName() + " — " + e.getMessage());
+            if (e.getCause() != null) {
+                System.err.println("   Caused by: " + e.getCause().getClass().getName() + " — " + e.getCause().getMessage());
+            }
+            e.printStackTrace();
+            return false;
         }
     }
 

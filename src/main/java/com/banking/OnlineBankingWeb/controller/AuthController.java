@@ -74,10 +74,17 @@ public class AuthController {
         customerRepository.save(customer);
         String otp = otpService.generateOtp(customer.getCustomerID());
         System.out.println("=== 2FA OTP for " + email + " : " + otp + " ===");
-        if (emailService != null) emailService.sendOTP(email, otp, "2fa");
+        boolean emailSent = false;
+        if (emailService != null) {
+            emailSent = emailService.sendOTP(email, otp, "2fa");
+        }
         session.setAttribute("pending_user", customer);
         model.addAttribute("email", email);
         model.addAttribute("type", "2fa");
+        if (!emailSent) {
+            model.addAttribute("otpFallback", otp);
+            model.addAttribute("success", "Email delivery unavailable. Your OTP is shown below.");
+        }
         return "verify-otp";
     }
 
@@ -105,10 +112,18 @@ public class AuthController {
         if (customer == null) { model.addAttribute("error", "No account found with this email."); return "forgot-password"; }
         String otp = otpService.generateOtp(customer.getCustomerID());
         System.out.println("=== RESET OTP for " + email + " : " + otp + " ===");
-        if (emailService != null) emailService.sendOTP(email, otp, "reset");
+        boolean emailSent = false;
+        if (emailService != null) {
+            emailSent = emailService.sendOTP(email, otp, "reset");
+        }
         model.addAttribute("email", email);
         model.addAttribute("type", "reset");
-        model.addAttribute("success", "OTP sent to " + email + "! Check your inbox or console.");
+        if (emailSent) {
+            model.addAttribute("success", "OTP sent to " + email + "! Check your inbox.");
+        } else {
+            model.addAttribute("otpFallback", otp);
+            model.addAttribute("success", "Email delivery unavailable. Your OTP is shown below.");
+        }
         return "verify-otp";
     }
 
@@ -151,10 +166,18 @@ public class AuthController {
         Customer customer = customerRepository.findByEmail(email);
         String otp = otpService.generateOtp(customer != null ? customer.getCustomerID() : -1);
         System.out.println("=== RESENT OTP for " + email + " : " + otp + " ===");
-        if (emailService != null) emailService.sendOTP(email, otp, type);
+        boolean emailSent = false;
+        if (emailService != null) {
+            emailSent = emailService.sendOTP(email, otp, type);
+        }
         model.addAttribute("email", email);
         model.addAttribute("type", type);
-        model.addAttribute("success", "OTP resent successfully!");
+        if (emailSent) {
+            model.addAttribute("success", "OTP resent successfully! Check your inbox.");
+        } else {
+            model.addAttribute("otpFallback", otp);
+            model.addAttribute("success", "Email delivery unavailable. Your OTP is shown below.");
+        }
         return "verify-otp";
     }
 
