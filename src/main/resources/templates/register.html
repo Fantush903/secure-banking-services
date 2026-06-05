@@ -1,186 +1,161 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-    <link rel="stylesheet" th:href="@{/css/global.css}"/>
-    <title>Online Banking - Register</title>
     <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Create Account — SecureBank</title>
+    <meta name="description" content="Open a new SecureBank account. Secure registration with KYC verification."/>
+    <link rel="stylesheet" th:href="@{/css/premium.css}"/>
+    <link rel="stylesheet" th:href="@{/css/premium-auth.css}"/>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Segoe UI', Arial, sans-serif; background: #0a0f1e; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 30px 0; }
-        .wrapper { display: flex; width: 950px; min-height: 600px; border-radius: 16px; overflow: hidden; box-shadow: 0 25px 60px rgba(0,0,0,0.5); }
-        .left { width: 340px; background: #1a237e; padding: 50px 36px; display: flex; flex-direction: column; justify-content: center; color: white; flex-shrink: 0; }
-        .left-logo { width: 56px; height: 56px; background: rgba(255,255,255,0.15); border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 28px; margin-bottom: 24px; }
-        .left h1 { font-size: 24px; font-weight: 700; margin-bottom: 8px; }
-        .left p { font-size: 13px; opacity: 0.75; margin-bottom: 32px; line-height: 1.6; }
-        .step { display: flex; align-items: flex-start; gap: 14px; margin-bottom: 20px; }
-        .step-num { width: 30px; height: 30px; background: rgba(255,255,255,0.15); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; flex-shrink: 0; }
+        .register-wrapper { display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 30px 20px; }
+        .register-container { display: flex; max-width: 1020px; width: 100%; border-radius: 24px; overflow: hidden; box-shadow: var(--glass-shadow); border: 1px solid var(--glass-border); animation: fadeInUp 0.7s ease-out; }
+        .register-brand { width: 340px; background: var(--accent-gradient); padding: 48px 36px; display: flex; flex-direction: column; justify-content: center; color: white; flex-shrink: 0; position: relative; overflow: hidden; }
+        .register-brand::before { content: ''; position: absolute; top: -50px; right: -50px; width: 180px; height: 180px; background: rgba(255,255,255,0.07); border-radius: 50%; }
+        .register-brand .brand-logo { width: 56px; height: 56px; background: rgba(255,255,255,0.15); border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 26px; margin-bottom: 24px; border: 1px solid rgba(255,255,255,0.2); }
+        .register-brand h1 { font-size: 24px; font-weight: 700; margin-bottom: 8px; }
+        .register-brand p { font-size: 13px; opacity: 0.8; margin-bottom: 32px; line-height: 1.6; }
+        .reg-step { display: flex; align-items: flex-start; gap: 14px; margin-bottom: 20px; }
+        .step-num { width: 32px; height: 32px; background: rgba(255,255,255,0.15); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; flex-shrink: 0; }
         .step-text { font-size: 13px; opacity: 0.85; line-height: 1.5; }
         .step-text strong { display: block; font-weight: 600; margin-bottom: 2px; }
-        .right { flex: 1; background: #fff; padding: 40px 44px; overflow-y: auto; }
-        .right-logo { display: flex; align-items: center; gap: 10px; margin-bottom: 24px; }
-        .right-logo-icon { width: 38px; height: 38px; background: #1a237e; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; }
-        .right-logo-text { font-size: 16px; font-weight: 700; color: #1a237e; }
-        h2 { font-size: 22px; font-weight: 700; color: #1a1a2e; margin-bottom: 4px; }
-        .subtitle { font-size: 13px; color: #888; margin-bottom: 24px; }
-        .alert { padding: 10px 14px; border-radius: 8px; font-size: 13px; margin-bottom: 16px; }
-        .alert-error { background: #fff3f3; border: 1px solid #ffcdd2; color: #c62828; }
-        .alert-success { background: #f1f8e9; border: 1px solid #c5e1a5; color: #2e7d32; }
-        .section-title { font-size: 12px; font-weight: 700; color: #1a237e; text-transform: uppercase; letter-spacing: 0.5px; margin: 20px 0 14px; padding-bottom: 8px; border-bottom: 1.5px solid #e8ecff; }
-        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-        .form-grid.full { grid-template-columns: 1fr; }
-        .input-group { margin-bottom: 4px; }
-        label { font-size: 12px; font-weight: 600; color: #444; display: block; margin-bottom: 5px; }
-        .required { color: #e53935; }
-        input, select { width: 100%; padding: 11px 14px; border: 1.5px solid #e0e0e0; border-radius: 8px; font-size: 13px; color: #333; outline: none; background: #fafafa; transition: border-color 0.2s; }
-        input:focus, select:focus { border-color: #1a237e; background: #fff; }
-        .strength-bar { height: 3px; border-radius: 3px; margin-top: 6px; background: #eee; overflow: hidden; }
-        .strength-fill { height: 100%; border-radius: 3px; transition: width 0.3s, background 0.3s; width: 0%; }
-        .strength-label { font-size: 11px; margin-top: 3px; font-weight: 600; color: #aaa; }
-        .terms { display: flex; align-items: flex-start; gap: 10px; margin: 18px 0; }
-        .terms input[type=checkbox] { width: 16px; height: 16px; margin-top: 2px; flex-shrink: 0; accent-color: #1a237e; }
-        .terms label { font-size: 12px; color: #666; line-height: 1.5; }
-        .terms a { color: #1a237e; text-decoration: none; }
-        .btn { width: 100%; padding: 13px; border: none; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer; background: #1a237e; color: white; margin-top: 4px; }
-        .btn:hover { background: #283593; }
-        .login-link { text-align: center; font-size: 13px; color: #888; margin-top: 16px; }
-        .login-link a { color: #1a237e; text-decoration: none; font-weight: 600; }
+        .register-form { flex: 1; background: var(--glass-bg); backdrop-filter: blur(20px); padding: 40px 44px; overflow-y: auto; max-height: 90vh; }
+        .reg-section-title { font-size: 12px; font-weight: 700; color: var(--accent-primary); text-transform: uppercase; letter-spacing: 1px; margin: 24px 0 14px; padding-bottom: 8px; border-bottom: 1px solid var(--glass-border); }
+        .reg-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+        .reg-form-grid.full { grid-template-columns: 1fr; }
+        .reg-input-group { margin-bottom: 4px; }
+        .required { color: var(--danger); }
+        .strength-bar { height: 4px; border-radius: 2px; margin-top: 6px; background: rgba(255,255,255,0.06); overflow: hidden; }
+        .strength-fill { height: 100%; border-radius: 2px; transition: width 0.3s, background 0.3s; width: 0%; }
+        .strength-label { font-size: 11px; margin-top: 4px; font-weight: 600; color: var(--text-dim); }
+        .terms { display: flex; align-items: flex-start; gap: 10px; margin: 20px 0; }
+        .terms input[type=checkbox] { width: 16px; height: 16px; margin-top: 2px; flex-shrink: 0; accent-color: var(--accent-primary); }
+        .terms label { font-size: 12px; color: var(--text-muted); line-height: 1.5; }
+        .terms a { color: var(--accent-primary); text-decoration: none; }
+        @media (max-width: 768px) {
+            .register-container { flex-direction: column; max-width: 520px; }
+            .register-brand { display: none; }
+            .register-form { padding: 32px 24px; max-height: none; }
+            .reg-form-grid { grid-template-columns: 1fr; }
+        }
     </style>
 </head>
 <body>
 <script th:src="@{/js/global.js}"></script>
-<div class="wrapper">
-    <!-- Left Panel -->
-    <div class="left">
-        <div class="left-logo">🏦</div>
-        <h1>Create Your Account</h1>
-        <p>Join SecureBank and experience modern banking with top-notch security.</p>
 
-        <div class="step">
-            <div class="step-num">1</div>
-            <div class="step-text"><strong>Personal Details</strong>Enter your name, email and contact info</div>
+<div class="register-wrapper">
+    <div class="register-container">
+        <!-- Left Brand -->
+        <div class="register-brand">
+            <div class="brand-logo">🏦</div>
+            <h1>Create Your Account</h1>
+            <p>Join SecureBank and experience modern banking with top-notch security.</p>
+            <div class="reg-step"><div class="step-num">1</div><div class="step-text"><strong>Personal Details</strong>Enter your name, email and contact info</div></div>
+            <div class="reg-step"><div class="step-num">2</div><div class="step-text"><strong>Identity Verification</strong>Provide Aadhaar & PAN for KYC</div></div>
+            <div class="reg-step"><div class="step-num">3</div><div class="step-text"><strong>Secure Password</strong>Set a strong password for your account</div></div>
+            <div class="reg-step"><div class="step-num">4</div><div class="step-text"><strong>Start Banking</strong>Login and access all features instantly</div></div>
         </div>
-        <div class="step">
-            <div class="step-num">2</div>
-            <div class="step-text"><strong>Identity Verification</strong>Provide Aadhaar & PAN for KYC</div>
+
+        <!-- Right Form -->
+        <div class="register-form">
+            <div class="auth-form-logo">
+                <div class="auth-form-logo-icon">🏦</div>
+                <span class="auth-form-logo-text">SecureBank</span>
+            </div>
+            <h2 style="color:var(--text-white);margin-bottom:4px;">Open New Account</h2>
+            <p style="font-size:13px;color:var(--text-muted);margin-bottom:24px;">Fill in the details below to get started</p>
+
+            <div th:if="${error}" class="premium-alert premium-alert-error" th:text="${error}"></div>
+            <div th:if="${success}" class="premium-alert premium-alert-success" th:text="${success}"></div>
+
+            <form method="post" action="/register">
+                <div class="reg-section-title">👤 Personal Information</div>
+                <div class="reg-form-grid">
+                    <div class="reg-input-group">
+                        <label class="premium-label">Full Name <span class="required">*</span></label>
+                        <input type="text" name="name" class="premium-input" placeholder="Fantush Kumar" required/>
+                    </div>
+                    <div class="reg-input-group">
+                        <label class="premium-label">Date of Birth <span class="required">*</span></label>
+                        <input type="date" name="dob" class="premium-input" required/>
+                    </div>
+                    <div class="reg-input-group">
+                        <label class="premium-label">Email Address <span class="required">*</span></label>
+                        <input type="email" name="email" class="premium-input" placeholder="you@example.com" required/>
+                    </div>
+                    <div class="reg-input-group">
+                        <label class="premium-label">Phone Number <span class="required">*</span></label>
+                        <input type="tel" name="phone" class="premium-input" placeholder="10-digit mobile" maxlength="10" required/>
+                    </div>
+                </div>
+                <div class="reg-form-grid full">
+                    <div class="reg-input-group">
+                        <label class="premium-label">Address</label>
+                        <input type="text" name="address" class="premium-input" placeholder="Full address"/>
+                    </div>
+                </div>
+
+                <div class="reg-section-title">🪪 KYC / Identity</div>
+                <div class="reg-form-grid">
+                    <div class="reg-input-group">
+                        <label class="premium-label">Aadhaar Number <span class="required">*</span></label>
+                        <input type="text" name="aadhaar" class="premium-input" placeholder="12-digit Aadhaar" maxlength="12" required/>
+                    </div>
+                    <div class="reg-input-group">
+                        <label class="premium-label">PAN Number <span class="required">*</span></label>
+                        <input type="text" name="pan" class="premium-input" placeholder="ABCDE1234F" maxlength="10" style="text-transform:uppercase" required/>
+                    </div>
+                </div>
+
+                <div class="reg-section-title">🏦 Account Preferences</div>
+                <div class="reg-form-grid">
+                    <div class="reg-input-group">
+                        <label class="premium-label">Account Type</label>
+                        <select name="accountType" class="premium-select">
+                            <option value="SAVINGS">Savings Account</option>
+                            <option value="CURRENT">Current Account</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="reg-section-title">🔒 Security</div>
+                <div class="reg-form-grid">
+                    <div class="reg-input-group">
+                        <label class="premium-label">Password <span class="required">*</span></label>
+                        <input type="password" name="password" id="pwd" class="premium-input" placeholder="Min 8 characters" required oninput="checkStrength(this.value)"/>
+                        <div class="strength-bar"><div class="strength-fill" id="strengthFill"></div></div>
+                        <div class="strength-label" id="strengthLabel">Enter a password</div>
+                    </div>
+                    <div class="reg-input-group">
+                        <label class="premium-label">Confirm Password <span class="required">*</span></label>
+                        <input type="password" name="confirmPassword" id="cpwd" class="premium-input" placeholder="Repeat password" required/>
+                    </div>
+                </div>
+
+                <div class="terms">
+                    <input type="checkbox" id="terms" name="terms" required/>
+                    <label for="terms">I agree to the <a href="#">Terms & Conditions</a> and <a href="#">Privacy Policy</a> of SecureBank</label>
+                </div>
+
+                <button type="submit" class="premium-btn">Create Account →</button>
+            </form>
+
+            <p class="auth-footer">Already have an account? <a href="/login">Sign in here</a></p>
         </div>
-        <div class="step">
-            <div class="step-num">3</div>
-            <div class="step-text"><strong>Secure Password</strong>Set a strong password for your account</div>
-        </div>
-        <div class="step">
-            <div class="step-num">4</div>
-            <div class="step-text"><strong>Start Banking</strong>Login and access all features instantly</div>
-        </div>
-    </div>
-
-    <!-- Right Panel -->
-    <div class="right">
-        <div class="right-logo">
-            <div class="right-logo-icon">🏦</div>
-            <span class="right-logo-text">SecureBank</span>
-        </div>
-        <h2>Open New Account</h2>
-        <p class="subtitle">Fill in the details below to get started</p>
-
-        <div th:if="${error}" class="alert alert-error" th:text="${error}"></div>
-        <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
-
-        <form method="post" action="/register">
-
-            <!-- Personal Info -->
-            <div class="section-title">👤 Personal Information</div>
-            <div class="form-grid">
-                <div class="input-group">
-                    <label>Full Name <span class="required">*</span></label>
-                    <input type="text" name="name" placeholder="Fantush Kumar" required/>
-                </div>
-                <div class="input-group">
-                    <label>Date of Birth <span class="required">*</span></label>
-                    <input type="date" name="dob" required/>
-                </div>
-                <div class="input-group">
-                    <label>Email Address <span class="required">*</span></label>
-                    <input type="email" name="email" placeholder="laxmi@example.com" required/>
-                </div>
-                <div class="input-group">
-                    <label>Phone Number <span class="required">*</span></label>
-                    <input type="tel" name="phone" placeholder="10-digit mobile number" maxlength="10" required/>
-                </div>
-            </div>
-            <div class="form-grid full">
-                <div class="input-group">
-                    <label>Address</label>
-                    <input type="text" name="address" placeholder="Full address"/>
-                </div>
-            </div>
-
-            <!-- KYC -->
-            <div class="section-title">🪪 KYC / Identity</div>
-            <div class="form-grid">
-                <div class="input-group">
-                    <label>Aadhaar Number <span class="required">*</span></label>
-                    <input type="text" name="aadhaar" placeholder="12-digit Aadhaar" maxlength="12" required/>
-                </div>
-                <div class="input-group">
-                    <label>PAN Number <span class="required">*</span></label>
-                    <input type="text" name="pan" placeholder="ABCDE1234F" maxlength="10" style="text-transform:uppercase" required/>
-                </div>
-            </div>
-
-            <!-- Account -->
-            <div class="section-title">🏦 Account Preferences</div>
-            <div class="form-grid">
-                <div class="input-group">
-                    <label>Account Type</label>
-                    <select name="accountType">
-                        <option value="SAVINGS">Savings Account</option>
-                        <option value="CURRENT">Current Account</option>
-                    </select>
-                </div>
-            </div>
-
-            <!-- Password -->
-            <div class="section-title">🔒 Security</div>
-            <div class="form-grid">
-                <div class="input-group">
-                    <label>Password <span class="required">*</span></label>
-                    <input type="password" name="password" id="pwd" placeholder="Min 8 characters" required oninput="checkStrength(this.value)"/>
-                    <div class="strength-bar"><div class="strength-fill" id="strengthFill"></div></div>
-                    <div class="strength-label" id="strengthLabel">Enter a password</div>
-                </div>
-                <div class="input-group">
-                    <label>Confirm Password <span class="required">*</span></label>
-                    <input type="password" name="confirmPassword" id="cpwd" placeholder="Repeat password" required/>
-                </div>
-            </div>
-
-            <!-- Terms -->
-            <div class="terms">
-                <input type="checkbox" id="terms" name="terms" required/>
-                <label for="terms">I agree to the <a href="#">Terms & Conditions</a> and <a href="#">Privacy Policy</a> of SecureBank</label>
-            </div>
-
-            <button type="submit" class="btn">Create Account →</button>
-        </form>
-
-        <p class="login-link">Already have an account? <a href="/login">Sign in here</a></p>
     </div>
 </div>
+
 <script>
     function checkStrength(pw) {
-        const r1 = pw.length >= 8;
-        const r2 = /[A-Z]/.test(pw);
-        const r3 = /[0-9]/.test(pw);
-        const r4 = /[@#$!%*?&]/.test(pw);
+        const r1 = pw.length >= 8, r2 = /[A-Z]/.test(pw), r3 = /[0-9]/.test(pw), r4 = /[@#$!%*?&]/.test(pw);
         const score = [r1, r2, r3, r4].filter(Boolean).length;
-        const fill = document.getElementById('strengthFill');
-        const label = document.getElementById('strengthLabel');
-        const colors = ['#e53935','#ff7043','#fdd835','#43a047'];
+        const fill = document.getElementById('strengthFill'), label = document.getElementById('strengthLabel');
+        const colors = ['#ef4444','#f59e0b','#eab308','#10b981'];
         const labels = ['Weak','Fair','Good','Strong'];
         fill.style.width = (score * 25) + '%';
-        fill.style.background = colors[score-1] || '#eee';
+        fill.style.background = colors[score-1] || 'transparent';
         label.textContent = score > 0 ? labels[score-1] : 'Enter a password';
-        label.style.color = colors[score-1] || '#aaa';
+        label.style.color = colors[score-1] || 'var(--text-dim)';
     }
 </script>
 </body>

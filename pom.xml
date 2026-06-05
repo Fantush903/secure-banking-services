@@ -86,6 +86,12 @@
 			<artifactId>spring-boot-starter-validation</artifactId>
 		</dependency>
 
+		<!-- WebSocket (STOMP messaging) -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-websocket</artifactId>
+		</dependency>
+
 		<!-- Hot reload during development -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>

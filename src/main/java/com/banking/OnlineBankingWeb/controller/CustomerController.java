@@ -864,10 +864,6 @@ public class CustomerController {
         return "statement";
     }
 
-    // ── Notifications ────────────────────────────────────────
-    @GetMapping("/notifications")
-    public String notifications(HttpSession session) { if (!ok(session)) return "redirect:/login"; return "notifications"; }
-
     // ── Help ─────────────────────────────────────────────────
     @GetMapping("/help")
     public String help(HttpSession session) { if (!ok(session)) return "redirect:/login"; return "help"; }

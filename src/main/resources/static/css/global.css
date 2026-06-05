@@ -45,6 +45,9 @@
     --error-text: #f28b82;
 }
 
+/* ── Base body styling ───────────────────── */
+body { background: var(--bg-primary); font-family: 'Inter', sans-serif; color: var(--text-primary); transition: background 0.3s, color 0.3s; }
+
 /* ── Dark Mode Toggle Button ─────────────────────────── */
 .dark-mode-toggle {
     width: 38px;

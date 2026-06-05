@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Financial Insights — SecureBank</title>
+    <meta name="description" content="AI-powered financial insights, spending analysis, and budget recommendations."/>
+    <link rel="stylesheet" th:href="@{/css/premium.css}"/>
+    <style>
+        .insight-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 28px; }
+        .spending-card { display: flex; align-items: center; gap: 14px; padding: 18px 22px; }
+        .spending-emoji { font-size: 28px; width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .spending-emoji.food { background: rgba(239,68,68,0.12); }
+        .spending-emoji.transport { background: rgba(59,130,246,0.12); }
+        .spending-emoji.shopping { background: rgba(168,85,247,0.12); }
+        .spending-emoji.bills { background: rgba(245,158,11,0.12); }
+        .spending-emoji.entertainment { background: rgba(236,72,153,0.12); }
+        .spending-emoji.healthcare { background: rgba(16,185,129,0.12); }
+        .spending-emoji.education { background: rgba(99,102,241,0.12); }
+        .spending-emoji.others { background: rgba(107,114,128,0.12); }
+        .spending-info { flex: 1; }
+        .spending-cat { font-size: 13px; font-weight: 600; color: var(--text-white); }
+        .spending-amt { font-size: 15px; font-weight: 700; color: var(--text-white); margin-top: 2px; }
+        .spending-bar { width: 100%; height: 6px; background: rgba(255,255,255,0.06); border-radius: 3px; margin-top: 8px; overflow: hidden; }
+        .spending-bar-fill { height: 100%; border-radius: 3px; transition: width 1s ease-out; }
+        .bar-red { background: linear-gradient(90deg, #ef4444, #f87171); }
+        .bar-blue { background: linear-gradient(90deg, #3b82f6, #60a5fa); }
+        .bar-purple { background: linear-gradient(90deg, #a855f7, #c084fc); }
+        .bar-amber { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
+        .bar-pink { background: linear-gradient(90deg, #ec4899, #f472b6); }
+        .bar-green { background: linear-gradient(90deg, #10b981, #34d399); }
+        .bar-indigo { background: linear-gradient(90deg, #6366f1, #818cf8); }
+        .bar-gray { background: linear-gradient(90deg, #6b7280, #9ca3af); }
+
+        /* Score Ring */
+        .score-section { text-align: center; padding: 40px 24px; }
+        .score-ring { position: relative; width: 160px; height: 160px; margin: 0 auto 20px; }
+        .score-ring svg { transform: rotate(-90deg); }
+        .score-ring circle { fill: none; stroke-width: 10; }
+        .score-bg { stroke: rgba(255,255,255,0.06); }
+        .score-fill { stroke: url(#scoreGrad); stroke-linecap: round; transition: stroke-dashoffset 2s ease-out; }
+        .score-text { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); }
+        .score-num { font-size: 42px; font-weight: 800; color: var(--text-white); }
+        .score-label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
+        .score-desc { font-size: 14px; color: var(--text-muted); max-width: 280px; margin: 0 auto; }
+
+        /* Monthly Trend */
+        .trend-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; padding: 24px; }
+        .trend-card { text-align: center; padding: 16px 8px; border-radius: 12px; background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border); transition: var(--transition); }
+        .trend-card:hover { border-color: var(--accent-primary); transform: translateY(-2px); }
+        .trend-card.highest { border-color: var(--accent-primary); background: rgba(99,102,241,0.08); }
+        .trend-month { font-size: 11px; color: var(--text-dim); font-weight: 600; text-transform: uppercase; margin-bottom: 8px; }
+        .trend-amount { font-size: 15px; font-weight: 700; color: var(--text-white); }
+        .trend-bar-wrap { height: 60px; display: flex; align-items: flex-end; justify-content: center; margin-bottom: 8px; }
+        .trend-bar { width: 28px; border-radius: 6px 6px 0 0; background: var(--accent-gradient); min-height: 8px; transition: height 1s ease-out; }
+
+        /* Tips */
+        .tips-grid { display: grid; grid-template-columns: 1fr; gap: 12px; padding: 24px; }
+        .tip-card { display: flex; align-items: flex-start; gap: 14px; padding: 16px 20px; background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border); border-radius: 12px; transition: var(--transition); }
+        .tip-card:hover { border-color: var(--accent-primary); background: rgba(99,102,241,0.04); }
+        .tip-icon { font-size: 24px; flex-shrink: 0; margin-top: 2px; }
+        .tip-text { font-size: 13px; color: var(--text-muted); line-height: 1.6; }
+
+        @media (max-width: 768px) {
+            .insight-grid { grid-template-columns: 1fr; }
+            .trend-grid { grid-template-columns: repeat(3, 1fr); }
+        }
+    </style>
+</head>
+<body>
+<script th:src="@{/js/global.js}"></script>
+
+<!-- SIDEBAR (same as dashboard) -->
+<div class="premium-sidebar" id="sidebar">
+    <div class="sidebar-logo"><div class="logo-icon">🏦</div><span class="logo-text">SecureBank</span></div>
+    <div class="sidebar-user-card">
+        <div class="user-avatar" th:text="${session.user.name != null ? session.user.name.substring(0,1) : 'U'}">U</div>
+        <div class="user-name" th:text="${session.user.name}">User</div>
+        <div class="user-email" th:text="${session.user.email}">user@email.com</div>
+        <span class="user-badge">● ACTIVE</span>
+    </div>
+    <nav>
+        <div class="nav-section-label">Main Menu</div>
+        <a href="/customer/dashboard" class="premium-nav-item"><span class="nav-icon">📊</span> Dashboard</a>
+        <a href="/customer/transfer" class="premium-nav-item"><span class="nav-icon">💸</span> Fund Transfer</a>
+        <a href="/customer/transactions" class="premium-nav-item"><span class="nav-icon">📋</span> Transactions</a>
+        <a href="/customer/upi" class="premium-nav-item"><span class="nav-icon">📲</span> UPI Payments</a>
+        <a href="/customer/loans" class="premium-nav-item"><span class="nav-icon">🏠</span> Loans</a>
+        <div class="nav-section-label">Services</div>
+        <a href="/customer/insights" class="premium-nav-item active"><span class="nav-icon">🧠</span> Insights</a>
+        <a href="/customer/notifications" class="premium-nav-item"><span class="nav-icon">🔔</span> Notifications</a>
+        <a href="/customer/profile" class="premium-nav-item"><span class="nav-icon">⚙️</span> Profile</a>
+    </nav>
+    <div class="sidebar-bottom"><a href="/logout" class="btn-logout">🚪 Sign Out</a></div>
+</div>
+
+<!-- MAIN -->
+<div class="premium-main">
+    <div class="premium-topbar">
+        <button class="mobile-menu-btn" onclick="toggleSidebar()">☰</button>
+        <span class="topbar-greeting">Financial Insights 🧠</span>
+        <div class="topbar-actions">
+            <button class="topbar-btn" onclick="toggleDarkMode()">🌙</button>
+            <span class="topbar-clock" id="clock"></span>
+        </div>
+    </div>
+
+    <div class="premium-content">
+        <div class="page-header">
+            <div>
+                <h1 class="page-title">Financial Insights</h1>
+                <p class="page-subtitle">AI-powered spending analysis and smart recommendations</p>
+            </div>
+        </div>
+
+        <div class="insight-grid">
+            <!-- Spending Breakdown -->
+            <div class="premium-card">
+                <div class="premium-card-header">
+                    <span class="premium-card-title">Spending Breakdown</span>
+                    <span class="premium-card-link">This month</span>
+                </div>
+                <div style="padding: 16px 0;">
+                    <div th:each="entry, iter : ${spendingBreakdown}" class="spending-card">
+                        <div th:class="'spending-emoji ' + ${entry.key.toLowerCase()}">
+                            <span th:text="${entry.key == 'Food' ? '🍔' : entry.key == 'Transport' ? '🚗' : entry.key == 'Shopping' ? '🛍️' : entry.key == 'Bills' ? '🧾' : entry.key == 'Entertainment' ? '🎬' : entry.key == 'Healthcare' ? '🏥' : entry.key == 'Education' ? '📚' : '📦'}"></span>
+                        </div>
+                        <div class="spending-info">
+                            <div class="spending-cat" th:text="${entry.key}">Category</div>
+                            <div class="spending-amt">₹ <span th:text="${#numbers.formatDecimal(entry.value, 1, 0, 'POINT')}">0</span></div>
+                            <div class="spending-bar">
+                                <div th:class="'spending-bar-fill ' + (${iter.index == 0} ? 'bar-red' : ${iter.index == 1} ? 'bar-blue' : ${iter.index == 2} ? 'bar-purple' : ${iter.index == 3} ? 'bar-amber' : ${iter.index == 4} ? 'bar-pink' : ${iter.index == 5} ? 'bar-green' : ${iter.index == 6} ? 'bar-indigo' : 'bar-gray')"
+                                     th:style="'width:' + ${entry.value * 100 / 15000} + '%'"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Savings Score -->
+            <div class="premium-card">
+                <div class="premium-card-header">
+                    <span class="premium-card-title">Savings Score</span>
+                    <span class="premium-badge badge-success" th:if="${savingsScore >= 70}">Excellent</span>
+                    <span class="premium-badge badge-warning" th:if="${savingsScore >= 40 and savingsScore < 70}">Good</span>
+                    <span class="premium-badge badge-danger" th:if="${savingsScore < 40}">Needs Work</span>
+                </div>
+                <div class="score-section">
+                    <div class="score-ring">
+                        <svg width="160" height="160" viewBox="0 0 160 160">
+                            <defs>
+                                <linearGradient id="scoreGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" style="stop-color:#6366f1"/>
+                                    <stop offset="100%" style="stop-color:#10b981"/>
+                                </linearGradient>
+                            </defs>
+                            <circle class="score-bg" cx="80" cy="80" r="70"/>
+                            <circle class="score-fill" cx="80" cy="80" r="70"
+                                    th:attr="stroke-dasharray=${440}, stroke-dashoffset=${440 - (440 * savingsScore / 100)}"/>
+                        </svg>
+                        <div class="score-text">
+                            <div class="score-num" th:text="${savingsScore}">75</div>
+                            <div class="score-label">Score</div>
+                        </div>
+                    </div>
+                    <p class="score-desc">Your savings score measures how well you manage your finances based on income, spending, and saving patterns.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Monthly Trend -->
+        <div class="premium-card" style="margin-bottom: 28px;">
+            <div class="premium-card-header">
+                <span class="premium-card-title">Monthly Spending Trend</span>
+                <span class="premium-card-link">Last 6 months</span>
+            </div>
+            <div class="trend-grid">
+                <div th:each="m : ${monthlyTrend}" class="trend-card" th:classappend="${m.get('amount') == m.get('max') ? 'highest' : ''}">
+                    <div class="trend-bar-wrap">
+                        <div class="trend-bar" th:style="'height:' + ${m.get('amount') * 100 / (m.get('max') != null ? m.get('max') : 1)} + '%'"></div>
+                    </div>
+                    <div class="trend-month" th:text="${m.get('month')}">Jan</div>
+                    <div class="trend-amount">₹<span th:text="${#numbers.formatDecimal(m.get('amount'), 1, 0, 'POINT')}">0</span></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recommendations -->
+        <div class="premium-card">
+            <div class="premium-card-header">
+                <span class="premium-card-title">Smart Recommendations</span>
+                <span class="premium-badge badge-info">AI Powered</span>
+            </div>
+            <div class="tips-grid">
+                <div th:each="tip, iter : ${recommendations}" class="tip-card animate-in">
+                    <span class="tip-icon" th:text="${iter.index == 0 ? '💡' : iter.index == 1 ? '📊' : iter.index == 2 ? '🎯' : iter.index == 3 ? '🔔' : '⭐'}"></span>
+                    <span class="tip-text" th:text="${tip}">Budget tip here</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function updateClock() {
+        const el = document.getElementById('clock');
+        if (el) el.textContent = new Date().toLocaleTimeString('en-IN', {hour:'2-digit', minute:'2-digit'});
+    }
+    updateClock(); setInterval(updateClock, 1000);
+    function toggleSidebar() {
+        document.getElementById('sidebar').classList.toggle('open');
+        let o = document.querySelector('.sidebar-overlay');
+        if (!o) { o = document.createElement('div'); o.className='sidebar-overlay'; o.onclick=function(){document.getElementById('sidebar').classList.remove('open');o.classList.remove('show');}; document.body.appendChild(o); }
+        o.classList.toggle('show');
+    }
+</script>
+</body>
+</html>

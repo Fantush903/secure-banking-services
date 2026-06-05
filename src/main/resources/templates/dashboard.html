@@ -1,173 +1,82 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-    <link rel="stylesheet" th:href="@{/css/global.css}"/>
-    <title>Dashboard — SecureBank</title>
     <meta charset="UTF-8"/>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f2f8; min-height: 100vh; display: flex; }
-
-        /* ── Sidebar ── */
-        .sidebar { width: 240px; background: #1a237e; min-height: 100vh; display: flex; flex-direction: column; flex-shrink: 0; position: fixed; top: 0; left: 0; height: 100%; z-index: 100; }
-        .sidebar-logo { padding: 24px 20px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid rgba(255,255,255,0.1); }
-        .sidebar-logo-icon { width: 40px; height: 40px; background: rgba(255,255,255,0.15); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; }
-        .sidebar-logo-text { font-size: 17px; font-weight: 700; color: white; }
-        .sidebar-user { padding: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); }
-        .sidebar-avatar { width: 44px; height: 44px; background: rgba(255,255,255,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 700; color: white; margin-bottom: 10px; }
-        .sidebar-name { font-size: 14px; font-weight: 600; color: white; }
-        .sidebar-email { font-size: 11px; color: rgba(255,255,255,0.6); margin-top: 2px; }
-        .sidebar-badge { display: inline-block; background: #43a047; color: white; font-size: 10px; padding: 2px 8px; border-radius: 20px; font-weight: 700; margin-top: 6px; }
-        .sidebar-nav { flex: 1; padding: 16px 0; }
-        .nav-section { padding: 8px 20px 4px; font-size: 10px; font-weight: 700; color: rgba(255,255,255,0.4); text-transform: uppercase; letter-spacing: 1px; }
-        .nav-item { display: flex; align-items: center; gap: 12px; padding: 12px 20px; font-size: 14px; color: rgba(255,255,255,0.75); text-decoration: none; transition: all 0.2s; cursor: pointer; border-left: 3px solid transparent; }
-        .nav-item:hover { background: rgba(255,255,255,0.08); color: white; }
-        .nav-item.active { background: rgba(255,255,255,0.12); color: white; border-left-color: white; font-weight: 600; }
-        .nav-icon { font-size: 18px; width: 22px; text-align: center; }
-        .sidebar-bottom { padding: 16px 20px; border-top: 1px solid rgba(255,255,255,0.1); }
-        .btn-logout { width: 100%; padding: 10px; background: rgba(229,57,53,0.2); color: #ef9a9a; border: 1px solid rgba(229,57,53,0.3); border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 8px; }
-        .btn-logout:hover { background: rgba(229,57,53,0.35); color: white; }
-
-        /* ── Main Content ── */
-        .main { margin-left: 240px; flex: 1; min-height: 100vh; }
-
-        /* ── Top Bar ── */
-        .topbar { background: white; padding: 0 30px; height: 64px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #e8e8e8; position: sticky; top: 0; z-index: 50; }
-        .topbar-title { font-size: 18px; font-weight: 700; color: #1a1a2e; }
-        .topbar-right { display: flex; align-items: center; gap: 16px; }
-        .topbar-time { font-size: 13px; color: #888; }
-        .notif-btn { width: 38px; height: 38px; background: #f5f5f5; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; cursor: pointer; position: relative; }
-        .notif-dot { width: 8px; height: 8px; background: #e53935; border-radius: 50%; position: absolute; top: 6px; right: 6px; }
-
-        /* ── Content Area ── */
-        .content { padding: 28px 30px; }
-
-        /* ── Balance Hero ── */
-        .balance-hero { background: linear-gradient(135deg, #1a237e 0%, #1565c0 50%, #0288d1 100%); border-radius: 20px; padding: 28px 32px; color: white; margin-bottom: 24px; position: relative; overflow: hidden; }
-        .balance-hero::before { content: ''; position: absolute; top: -40px; right: -40px; width: 200px; height: 200px; background: rgba(255,255,255,0.05); border-radius: 50%; }
-        .balance-hero::after { content: ''; position: absolute; bottom: -60px; right: 60px; width: 150px; height: 150px; background: rgba(255,255,255,0.04); border-radius: 50%; }
-        .balance-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; }
-        .balance-label { font-size: 13px; opacity: 0.8; margin-bottom: 8px; }
-        .balance-amount { font-size: 42px; font-weight: 800; letter-spacing: -1px; }
-        .balance-sub { font-size: 13px; opacity: 0.7; margin-top: 4px; }
-        .balance-card-num { font-size: 14px; opacity: 0.7; letter-spacing: 2px; }
-        .balance-actions { display: flex; gap: 10px; margin-top: 20px; flex-wrap: wrap; }
-        .balance-btn { padding: 10px 20px; border-radius: 10px; font-size: 13px; font-weight: 600; cursor: pointer; text-decoration: none; display: flex; align-items: center; gap: 8px; transition: all 0.2s; }
-        .balance-btn-white { background: white; color: #1a237e; border: none; }
-        .balance-btn-white:hover { background: #f0f4ff; }
-        .balance-btn-outline { background: rgba(255,255,255,0.15); color: white; border: 1px solid rgba(255,255,255,0.3); }
-        .balance-btn-outline:hover { background: rgba(255,255,255,0.25); }
-
-        /* ── Quick Stats ── */
-        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 24px; }
-        .stat-card { background: white; border-radius: 14px; padding: 20px 22px; border: 0.5px solid #e8e8e8; display: flex; align-items: center; gap: 16px; }
-        .stat-icon-wrap { width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0; }
-        .stat-icon-blue { background: #e3f2fd; }
-        .stat-icon-green { background: #e8f5e9; }
-        .stat-icon-orange { background: #fff3e0; }
-        .stat-info { flex: 1; }
-        .stat-value { font-size: 20px; font-weight: 700; color: #1a1a2e; }
-        .stat-label { font-size: 12px; color: #999; font-weight: 500; margin-top: 2px; }
-        .stat-change { font-size: 11px; font-weight: 600; margin-top: 4px; }
-        .change-up { color: #2e7d32; }
-        .change-down { color: #c62828; }
-
-        /* ── Quick Actions ── */
-        .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
-        .section-title { font-size: 16px; font-weight: 700; color: #1a1a2e; }
-        .section-link { font-size: 13px; color: #1a237e; text-decoration: none; font-weight: 500; }
-        .actions-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 24px; }
-        .action-card { background: white; border-radius: 14px; padding: 20px 16px; text-align: center; text-decoration: none; border: 0.5px solid #e8e8e8; transition: all 0.2s; display: block; }
-        .action-card:hover { border-color: #1a237e; background: #f5f6ff; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(26,35,126,0.1); }
-        .action-icon { font-size: 28px; margin-bottom: 10px; }
-        .action-label { font-size: 13px; font-weight: 600; color: #333; }
-        .action-sub { font-size: 11px; color: #aaa; margin-top: 3px; }
-
-        /* ── Bottom Grid ── */
-        .bottom-grid { display: grid; grid-template-columns: 1.6fr 1fr; gap: 20px; }
-        .card { background: white; border-radius: 14px; border: 0.5px solid #e8e8e8; overflow: hidden; }
-        .card-header { padding: 16px 22px; border-bottom: 1px solid #f0f0f0; display: flex; justify-content: space-between; align-items: center; }
-        .card-title { font-size: 15px; font-weight: 600; color: #1a1a2e; }
-        .card-link { font-size: 12px; color: #1a237e; text-decoration: none; }
-        table { width: 100%; border-collapse: collapse; }
-        th { font-size: 11px; font-weight: 700; color: #bbb; text-transform: uppercase; letter-spacing: 0.5px; padding: 10px 22px; text-align: left; background: #fafafa; }
-        td { padding: 13px 22px; font-size: 13px; color: #444; border-bottom: 1px solid #f8f8f8; vertical-align: middle; }
-        tr:last-child td { border-bottom: none; }
-        .badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; }
-        .badge-green { background: #e8f5e9; color: #2e7d32; }
-        .badge-blue { background: #e3f2fd; color: #1565c0; }
-        .empty-state { text-align: center; padding: 40px 20px; color: #ccc; }
-        .empty-state div:first-child { font-size: 36px; margin-bottom: 8px; }
-        .empty-state p { font-size: 13px; }
-
-        /* ── Account Info Card ── */
-        .info-list { padding: 8px 0; }
-        .info-row { display: flex; justify-content: space-between; padding: 11px 22px; border-bottom: 1px solid #f8f8f8; }
-        .info-row:last-child { border-bottom: none; }
-        .info-key { font-size: 12px; color: #999; font-weight: 600; }
-        .info-val { font-size: 13px; color: #333; font-weight: 500; }
-        .status-dot { display: inline-block; width: 8px; height: 8px; background: #43a047; border-radius: 50%; margin-right: 6px; }
-    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Dashboard — SecureBank</title>
+    <meta name="description" content="SecureBank customer dashboard. View your balance, transactions, and manage your account."/>
+    <link rel="stylesheet" th:href="@{/css/premium.css}"/>
 </head>
 <body>
 <script th:src="@{/js/global.js}"></script>
-<!-- ── Sidebar ── -->
-<div class="sidebar">
+
+<!-- ══ SIDEBAR ══ -->
+<div class="premium-sidebar" id="sidebar">
     <div class="sidebar-logo">
-        <div class="sidebar-logo-icon">🏦</div>
-        <span class="sidebar-logo-text">SecureBank</span>
+        <div class="logo-icon">🏦</div>
+        <span class="logo-text">SecureBank</span>
     </div>
-    <div class="sidebar-user">
-        <div class="sidebar-avatar" th:text="${session.user.name != null ? session.user.name.substring(0,1) : 'U'}">F</div>
-        <div class="sidebar-name" th:text="${session.user.name}">Laxmi Kumari</div>
-        <div class="sidebar-email" th:text="${session.user.email}">laxmi@example.com</div>
-        <span class="sidebar-badge">● ACTIVE</span>
+    <div class="sidebar-user-card">
+        <div class="user-avatar" th:text="${session.user.name != null ? session.user.name.substring(0,1) : 'U'}">U</div>
+        <div class="user-name" th:text="${session.user.name}">User</div>
+        <div class="user-email" th:text="${session.user.email}">user@email.com</div>
+        <span class="user-badge">● ACTIVE</span>
     </div>
-    <nav class="sidebar-nav">
-        <div class="nav-section">Main Menu</div>
-        <a href="/customer/dashboard" class="nav-item active">
-            <span class="nav-icon">📊</span> Dashboard
-        </a>
-        <a href="/customer/transfer" class="nav-item">
-            <span class="nav-icon">💸</span> Fund Transfer
-        </a>
-        <a href="/customer/transactions" class="nav-item">
-            <span class="nav-icon">📋</span> Transactions
-        </a>
-        <a href="/customer/loans" class="nav-item">
-            <span class="nav-icon">🏠</span> Loans
-        </a>
-        <div class="nav-section" style="margin-top:8px">Account</div>
-        <a href="/customer/profile" class="nav-item">
-            <span class="nav-icon">👤</span> Profile
-        </a>
-        <a href="/customer/profile" class="nav-item">
-            <span class="nav-icon">🔒</span> Security
-        </a>
+    <nav>
+        <div class="nav-section-label">Main Menu</div>
+        <a href="/customer/dashboard" class="premium-nav-item active"><span class="nav-icon">📊</span> Dashboard</a>
+        <a href="/customer/transfer" class="premium-nav-item"><span class="nav-icon">💸</span> Fund Transfer</a>
+        <a href="/customer/transactions" class="premium-nav-item"><span class="nav-icon">📋</span> Transactions</a>
+        <a href="/customer/upi" class="premium-nav-item"><span class="nav-icon">📲</span> UPI Payments</a>
+        <a href="/customer/loans" class="premium-nav-item"><span class="nav-icon">🏠</span> Loans</a>
+        <a href="/customer/bills" class="premium-nav-item"><span class="nav-icon">🧾</span> Pay Bills</a>
+
+        <div class="nav-section-label">Account</div>
+        <a href="/customer/beneficiaries" class="premium-nav-item"><span class="nav-icon">👥</span> Beneficiaries</a>
+        <a href="/customer/card" class="premium-nav-item"><span class="nav-icon">💳</span> Cards</a>
+        <a href="/customer/statement" class="premium-nav-item"><span class="nav-icon">📄</span> Statement</a>
+        <a href="/customer/fd" class="premium-nav-item"><span class="nav-icon">🏦</span> Fixed Deposits</a>
+        <a href="/customer/rd" class="premium-nav-item"><span class="nav-icon">💰</span> Recurring Deposits</a>
+        <a href="/customer/cheque" class="premium-nav-item"><span class="nav-icon">📝</span> Cheque Book</a>
+        <a href="/customer/standing-instructions" class="premium-nav-item"><span class="nav-icon">🔄</span> Standing Orders</a>
+
+        <div class="nav-section-label">Services</div>
+        <a href="/customer/currency" class="premium-nav-item"><span class="nav-icon">💱</span> Currency</a>
+        <a href="/customer/nominee" class="premium-nav-item"><span class="nav-icon">👤</span> Nominee</a>
+        <a href="/customer/kyc" class="premium-nav-item"><span class="nav-icon">🪪</span> KYC</a>
+        <a href="/customer/insights" class="premium-nav-item"><span class="nav-icon">🧠</span> Insights</a>
+        <a href="/customer/notifications" class="premium-nav-item"><span class="nav-icon">🔔</span> Notifications</a>
+
+        <div class="nav-section-label">Support</div>
+        <a href="/customer/complaints" class="premium-nav-item"><span class="nav-icon">📩</span> Complaints</a>
+        <a href="/customer/service-request" class="premium-nav-item"><span class="nav-icon">🛎️</span> Service Request</a>
+        <a href="/customer/help" class="premium-nav-item"><span class="nav-icon">❓</span> Help</a>
+        <a href="/customer/profile" class="premium-nav-item"><span class="nav-icon">⚙️</span> Profile</a>
     </nav>
     <div class="sidebar-bottom">
         <a href="/logout" class="btn-logout">🚪 Sign Out</a>
     </div>
 </div>
 
-<!-- ── Main ── -->
-<div class="main">
+<!-- ══ MAIN CONTENT ══ -->
+<div class="premium-main">
     <!-- Top Bar -->
-    <div class="topbar">
-        <span class="topbar-title">Good day, <span th:text="${session.user.name}">User</span> 👋</span>
-        <button class="mobile-menu-btn" onclick="">☰</button>
-        <div class="topbar-right">
-            <button class="dark-mode-toggle" onclick="toggleDarkMode()">🌙</button>
-            <span class="topbar-time" id="clock"></span>
-            <div class="notif-btn">🔔<div class="notif-dot"></div></div>
+    <div class="premium-topbar">
+        <button class="mobile-menu-btn" onclick="toggleSidebar()">☰</button>
+        <span class="topbar-greeting">Good day, <span th:text="${session.user.name}">User</span> 👋</span>
+        <div class="topbar-actions">
+            <button class="topbar-btn" onclick="toggleDarkMode()" title="Toggle Theme">🌙</button>
+            <span class="topbar-clock" id="clock"></span>
+            <a href="/customer/notifications" class="topbar-btn" title="Notifications">
+                🔔<div class="notification-badge"></div>
+            </a>
         </div>
     </div>
 
     <!-- Content -->
-    <div class="content">
-
+    <div class="premium-content">
         <!-- Balance Hero -->
-        <div class="balance-hero">
+        <div class="balance-hero-premium">
             <div class="balance-top">
                 <div>
                     <div class="balance-label">Total Available Balance</div>
@@ -176,40 +85,41 @@
                 </div>
                 <div style="text-align:right">
                     <div class="balance-card-num">**** **** **** <span th:text="${account.accountNumber.substring(account.accountNumber.length()-4)}">0001</span></div>
-                    <div style="font-size:12px;opacity:0.6;margin-top:6px" th:text="${session.user.email}">fantusharyanfkb@gmail.com</div>
+                    <div style="font-size:12px;opacity:0.6;margin-top:6px" th:text="${session.user.email}">email@example.com</div>
                 </div>
             </div>
-            <div class="balance-actions">
-                <a href="/customer/transfer" class="balance-btn balance-btn-white">💸 Send Money</a>
-                <a href="/customer/transactions" class="balance-btn balance-btn-outline">📋 History</a>
-                <a href="/customer/loans" class="balance-btn balance-btn-outline">🏠 Apply Loan</a>
+            <div class="hero-actions">
+                <a href="/customer/transfer" class="hero-btn hero-btn-primary">💸 Send Money</a>
+                <a href="/customer/transactions" class="hero-btn hero-btn-ghost">📋 History</a>
+                <a href="/customer/loans" class="hero-btn hero-btn-ghost">🏠 Apply Loan</a>
+                <a href="/customer/insights" class="hero-btn hero-btn-ghost">🧠 Insights</a>
             </div>
         </div>
 
-        <!-- Stats -->
-        <div class="stats-grid">
-            <div class="stat-card">
-                <div class="stat-icon-wrap stat-icon-green">💰</div>
+        <!-- Stats Grid -->
+        <div class="premium-stats-grid">
+            <div class="premium-stat-card animate-in">
+                <div class="stat-icon-circle stat-icon-green">💰</div>
                 <div class="stat-info">
                     <div class="stat-value">₹ <span th:text="${#numbers.formatDecimal(totalCredited, 1, 2, 'POINT')}">0.00</span></div>
                     <div class="stat-label">Total Credited</div>
-                    <div class="stat-change change-up">↑ This month</div>
+                    <div class="stat-trend trend-up">↑ This month</div>
                 </div>
             </div>
-            <div class="stat-card">
-                <div class="stat-icon-wrap stat-icon-orange">💸</div>
+            <div class="premium-stat-card animate-in">
+                <div class="stat-icon-circle stat-icon-orange">💸</div>
                 <div class="stat-info">
                     <div class="stat-value">₹ <span th:text="${#numbers.formatDecimal(totalDebited, 1, 2, 'POINT')}">0.00</span></div>
                     <div class="stat-label">Total Debited</div>
-                    <div class="stat-change change-down">↓ This month</div>
+                    <div class="stat-trend trend-down">↓ This month</div>
                 </div>
             </div>
-            <div class="stat-card">
-                <div class="stat-icon-wrap stat-icon-blue">📊</div>
+            <div class="premium-stat-card animate-in">
+                <div class="stat-icon-circle stat-icon-blue">📊</div>
                 <div class="stat-info">
                     <div class="stat-value" th:text="${totalTxCount}">0</div>
                     <div class="stat-label">Transactions</div>
-                    <div class="stat-change" style="color:#888">All time</div>
+                    <div class="stat-trend" style="color:var(--text-dim)">All time</div>
                 </div>
             </div>
         </div>
@@ -218,44 +128,64 @@
         <div class="section-header">
             <span class="section-title">Quick Actions</span>
         </div>
-        <div class="actions-grid">
-            <a href="/customer/transfer" class="action-card">
-                <div class="action-icon">💸</div>
-                <div class="action-label">Send Money</div>
-                <div class="action-sub">NEFT / RTGS / IMPS</div>
+        <div class="premium-actions-grid">
+            <a href="/customer/transfer" class="premium-action-card animate-in">
+                <span class="action-emoji">💸</span>
+                <div class="action-title">Send Money</div>
+                <div class="action-desc">NEFT / RTGS / IMPS</div>
             </a>
-            <a href="/customer/transactions" class="action-card">
-                <div class="action-icon">📋</div>
-                <div class="action-label">Transactions</div>
-                <div class="action-sub">View history</div>
+            <a href="/customer/upi" class="premium-action-card animate-in">
+                <span class="action-emoji">📲</span>
+                <div class="action-title">UPI Payment</div>
+                <div class="action-desc">Instant transfer</div>
             </a>
-            <a href="/customer/loans" class="action-card">
-                <div class="action-icon">🏠</div>
-                <div class="action-label">Apply Loan</div>
-                <div class="action-sub">Home / Personal</div>
+            <a href="/customer/bills" class="premium-action-card animate-in">
+                <span class="action-emoji">🧾</span>
+                <div class="action-title">Pay Bills</div>
+                <div class="action-desc">Utilities & more</div>
             </a>
-            <a href="/customer/profile" class="action-card">
-                <div class="action-icon">👤</div>
-                <div class="action-label">Profile</div>
-                <div class="action-sub">Update details</div>
+            <a href="/customer/loans" class="premium-action-card animate-in">
+                <span class="action-emoji">🏠</span>
+                <div class="action-title">Apply Loan</div>
+                <div class="action-desc">Home / Personal</div>
+            </a>
+            <a href="/customer/card" class="premium-action-card animate-in">
+                <span class="action-emoji">💳</span>
+                <div class="action-title">Cards</div>
+                <div class="action-desc">Manage & apply</div>
+            </a>
+            <a href="/customer/statement" class="premium-action-card animate-in">
+                <span class="action-emoji">📄</span>
+                <div class="action-title">Statement</div>
+                <div class="action-desc">Download PDF</div>
+            </a>
+            <a href="/customer/insights" class="premium-action-card animate-in">
+                <span class="action-emoji">🧠</span>
+                <div class="action-title">Insights</div>
+                <div class="action-desc">AI analytics</div>
+            </a>
+            <a href="/customer/profile" class="premium-action-card animate-in">
+                <span class="action-emoji">⚙️</span>
+                <div class="action-title">Profile</div>
+                <div class="action-desc">Update details</div>
             </a>
         </div>
 
         <!-- Bottom Grid -->
-        <div class="bottom-grid">
+        <div class="premium-bottom-grid">
             <!-- Recent Transactions -->
-            <div class="card">
-                <div class="card-header">
-                    <span class="card-title">Recent Transactions</span>
-                    <a href="/customer/transactions" class="card-link">View all →</a>
+            <div class="premium-card">
+                <div class="premium-card-header">
+                    <span class="premium-card-title">Recent Transactions</span>
+                    <a href="/customer/transactions" class="premium-card-link">View all →</a>
                 </div>
                 <div th:if="${transactions == null or transactions.isEmpty()}">
-                    <div class="empty-state">
-                        <div>📭</div>
+                    <div class="premium-empty">
+                        <div class="empty-icon">📭</div>
                         <p>No transactions yet.<br/>Start by making a transfer!</p>
                     </div>
                 </div>
-                <table th:if="${transactions != null and !transactions.isEmpty()}">
+                <table th:if="${transactions != null and !transactions.isEmpty()}" class="premium-table">
                     <tr>
                         <th>Description</th>
                         <th>Amount</th>
@@ -264,45 +194,45 @@
                     <tr th:each="tx : ${transactions}">
                         <td th:text="${tx.description}">—</td>
                         <td th:text="'₹ ' + ${tx.amount}">—</td>
-                        <td><span class="badge badge-green">Success</span></td>
+                        <td><span class="premium-badge badge-success">Success</span></td>
                     </tr>
                 </table>
             </div>
 
             <!-- Account Info -->
-            <div class="card">
-                <div class="card-header">
-                    <span class="card-title">Account Details</span>
-                    <a href="/customer/profile" class="card-link">Edit →</a>
+            <div class="premium-card">
+                <div class="premium-card-header">
+                    <span class="premium-card-title">Account Details</span>
+                    <a href="/customer/profile" class="premium-card-link">Edit →</a>
                 </div>
-                <div class="info-list">
-                    <div class="info-row">
-                        <span class="info-key">Account No.</span>
-                        <span class="info-val" th:text="${account.accountNumber}">1001-0000-0001</span>
+                <div class="premium-info-list">
+                    <div class="premium-info-row">
+                        <span class="premium-info-key">Account No.</span>
+                        <span class="premium-info-val" th:text="${account.accountNumber}">1001-0000-0001</span>
                     </div>
-                    <div class="info-row">
-                        <span class="info-key">Account Type</span>
-                        <span class="info-val" th:text="${account.accountType}">Savings</span>
+                    <div class="premium-info-row">
+                        <span class="premium-info-key">Account Type</span>
+                        <span class="premium-info-val" th:text="${account.accountType}">Savings</span>
                     </div>
-                    <div class="info-row">
-                        <span class="info-key">Status</span>
-                        <span class="info-val"><span class="status-dot"></span><span th:text="${session.user.status}">ACTIVE</span></span>
+                    <div class="premium-info-row">
+                        <span class="premium-info-key">Status</span>
+                        <span class="premium-info-val"><span class="status-dot"></span><span th:text="${session.user.status}">ACTIVE</span></span>
                     </div>
-                    <div class="info-row">
-                        <span class="info-key">Name</span>
-                        <span class="info-val" th:text="${session.user.name}">—</span>
+                    <div class="premium-info-row">
+                        <span class="premium-info-key">Name</span>
+                        <span class="premium-info-val" th:text="${session.user.name}">—</span>
                     </div>
-                    <div class="info-row">
-                        <span class="info-key">Email</span>
-                        <span class="info-val" th:text="${session.user.email}">—</span>
+                    <div class="premium-info-row">
+                        <span class="premium-info-key">Email</span>
+                        <span class="premium-info-val" th:text="${session.user.email}">—</span>
                     </div>
-                    <div class="info-row">
-                        <span class="info-key">Phone</span>
-                        <span class="info-val" th:text="${session.user.phone ?: 'Not set'}">—</span>
+                    <div class="premium-info-row">
+                        <span class="premium-info-key">Phone</span>
+                        <span class="premium-info-val" th:text="${session.user.phone ?: 'Not set'}">—</span>
                     </div>
-                    <div class="info-row">
-                        <span class="info-key">2FA</span>
-                        <span class="info-val" style="color:#2e7d32;font-weight:600">✅ Enabled</span>
+                    <div class="premium-info-row">
+                        <span class="premium-info-key">2FA</span>
+                        <span class="premium-info-val" style="color:var(--success);font-weight:600">✅ Enabled</span>
                     </div>
                 </div>
             </div>
@@ -312,12 +242,28 @@
 </div>
 
 <script>
+    // Live clock
     function updateClock() {
-        const now = new Date();
-        document.getElementById('clock').textContent = now.toLocaleTimeString('en-IN', {hour:'2-digit', minute:'2-digit'});
+        const el = document.getElementById('clock');
+        if (el) el.textContent = new Date().toLocaleTimeString('en-IN', {hour:'2-digit', minute:'2-digit'});
     }
-    updateClock();
-    setInterval(updateClock, 1000);
+    updateClock(); setInterval(updateClock, 1000);
+
+    // Mobile sidebar toggle
+    function toggleSidebar() {
+        document.getElementById('sidebar').classList.toggle('open');
+        let overlay = document.querySelector('.sidebar-overlay');
+        if (!overlay) {
+            overlay = document.createElement('div');
+            overlay.className = 'sidebar-overlay';
+            overlay.onclick = function() {
+                document.getElementById('sidebar').classList.remove('open');
+                overlay.classList.remove('show');
+            };
+            document.body.appendChild(overlay);
+        }
+        overlay.classList.toggle('show');
+    }
 </script>
 </body>
 </html>

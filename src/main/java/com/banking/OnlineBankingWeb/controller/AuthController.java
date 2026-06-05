@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import com.banking.OnlineBankingWeb.service.OTPService;
 import org.springframework.web.bind.annotation.*;
 import java.security.SecureRandom;
 import java.util.HashMap;
@@ -23,10 +24,10 @@ public class AuthController {
     @Autowired(required = false) private EmailService emailService;
     @Autowired private PasswordEncoder passwordEncoder;
     @Autowired private SecurityLogRepository securityLogRepository;
+    @Autowired private OTPService otpService;
 
     private final SecureRandom secureRandom = new SecureRandom();
 
-    private final Map<String, String> otpStore = new HashMap<>();
     private final Map<String, String> resetTokens = new HashMap<>();
 
     @GetMapping("/")
@@ -71,8 +72,7 @@ public class AuthController {
         customer.setFailedLogins(0);
         upgradeLegacyPasswordIfNeeded(customer, password);
         customerRepository.save(customer);
-        String otp = generateOTP();
-        otpStore.put(email, otp);
+        String otp = otpService.generateOtp(customer.getCustomerID());
         System.out.println("=== 2FA OTP for " + email + " : " + otp + " ===");
         if (emailService != null) emailService.sendOTP(email, otp, "2fa");
         session.setAttribute("pending_user", customer);
@@ -103,8 +103,7 @@ public class AuthController {
     public String forgotSubmit(@RequestParam String email, Model model) {
         Customer customer = customerRepository.findByEmail(email);
         if (customer == null) { model.addAttribute("error", "No account found with this email."); return "forgot-password"; }
-        String otp = generateOTP();
-        otpStore.put(email, otp);
+        String otp = otpService.generateOtp(customer.getCustomerID());
         System.out.println("=== RESET OTP for " + email + " : " + otp + " ===");
         if (emailService != null) emailService.sendOTP(email, otp, "reset");
         model.addAttribute("email", email);
@@ -116,20 +115,21 @@ public class AuthController {
     @PostMapping("/verify-otp")
     public String verifyOtp(@RequestParam String email, @RequestParam String otp,
                             @RequestParam String type, HttpServletRequest request, HttpSession session, Model model) {
-        String stored = otpStore.get(email);
-        if (stored == null || !stored.equals(otp)) {
+        Customer customer = customerRepository.findByEmail(email);
+        boolean valid = otpService.verifyOtp(customer != null ? customer.getCustomerID() : -1, otp);
+        if (!valid) {
             model.addAttribute("error", "Invalid or expired OTP. Please try again.");
-            model.addAttribute("email", email); model.addAttribute("type", type);
+            model.addAttribute("email", email);
+            model.addAttribute("type", type);
             return "verify-otp";
         }
-        otpStore.remove(email);
         if (type.equals("2fa")) {
-            Customer customer = (Customer) session.getAttribute("pending_user");
-            if (customer == null) return "redirect:/login";
+            Customer pendingCustomer = (Customer) session.getAttribute("pending_user");
+            if (pendingCustomer == null) return "redirect:/login";
             
             // Log login success
             SecurityLog log = new SecurityLog();
-            log.setCustomerId(customer.getCustomerID());
+            log.setCustomerId(pendingCustomer.getCustomerID());
             log.setAction("LOGIN_SUCCESS");
             log.setIpAddress(request.getRemoteAddr());
             log.setUserAgent(request.getHeader("User-Agent"));
@@ -148,11 +148,12 @@ public class AuthController {
 
     @GetMapping("/resend-otp")
     public String resendOtp(@RequestParam String email, @RequestParam(defaultValue = "2fa") String type, Model model) {
-        String otp = generateOTP();
-        otpStore.put(email, otp);
+        Customer customer = customerRepository.findByEmail(email);
+        String otp = otpService.generateOtp(customer != null ? customer.getCustomerID() : -1);
         System.out.println("=== RESENT OTP for " + email + " : " + otp + " ===");
         if (emailService != null) emailService.sendOTP(email, otp, type);
-        model.addAttribute("email", email); model.addAttribute("type", type);
+        model.addAttribute("email", email);
+        model.addAttribute("type", type);
         model.addAttribute("success", "OTP resent successfully!");
         return "verify-otp";
     }
