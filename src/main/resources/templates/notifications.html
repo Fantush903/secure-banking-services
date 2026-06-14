@@ -60,23 +60,21 @@
 
 <!-- ══ MAIN CONTENT ══ -->
 <div class="premium-main">
-    <!-- Top Bar -->
     <div class="premium-topbar">
         <button class="mobile-menu-btn" onclick="toggleSidebar()">☰</button>
-        <span class="topbar-greeting">Notifications Center 🔔</span>
+        <span class="topbar-greeting">🔔 Notifications Center</span>
         <div class="topbar-actions">
             <button class="dark-mode-toggle topbar-btn" onclick="toggleDarkMode()" title="Toggle Theme">🌙</button>
             <span class="topbar-clock" id="clock"></span>
             
             <form method="post" action="/customer/notifications/read-all" style="display:inline-block; margin-left: 8px;">
-                <button type="submit" class="hero-btn hero-btn-primary" style="padding: 8px 16px; font-size: 12px; border-radius: 8px;">Mark All Read ✓</button>
+                <button type="submit" class="premium-btn" style="padding: 8px 16px; font-size: 12px; border-radius: 8px;">Mark All Read ✓</button>
             </form>
         </div>
     </div>
 
-    <!-- Content -->
     <div class="premium-content">
-        <div style="max-width: 800px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px;">
+        <div style="max-width: 800px; margin: 0 auto; display: flex; flex-direction: column; gap: 24px;">
             <!-- Filter Tabs -->
             <div style="display: flex; gap: 8px; flex-wrap: wrap;">
                 <button class="filter-tab active" onclick="filterNotifs(this, 'all')" style="padding: 8px 18px; border-radius: 20px; font-size: 13px; font-weight: 600; cursor: pointer; border: 1px solid var(--glass-border); background: var(--glass-bg); color: var(--text-white); transition: var(--transition);">All</button>
@@ -87,19 +85,19 @@
             </div>
 
             <!-- Notifications List -->
-            <div style="display: flex; flex-direction: column; gap: 12px;" id="notifList">
+            <div style="display: flex; flex-direction: column; gap: 16px;" id="notifList">
                 <!-- Empty State -->
-                <div th:if="${#lists.isEmpty(notifications)}" class="glass-card" style="padding: 48px; text-align: center;">
-                    <div style="font-size: 48px; margin-bottom: 12px;">🔔</div>
+                <div th:if="${#lists.isEmpty(notifications)}" class="glass-card premium-card" style="text-align: center; padding: 48px;">
+                    <div style="font-size: 48px; margin-bottom: 16px;">🔔</div>
                     <p style="color: var(--text-muted); font-size: 14px;">You are all caught up! No notifications yet.</p>
                 </div>
 
                 <!-- Notification Row -->
                 <div th:each="notif : ${notifications}" 
-                     class="glass-card notif-item" 
+                     class="glass-card premium-card notif-item" 
                      th:classappend="${notif.read ? '' : 'unread'}"
                      th:data-type="${#strings.toLowerCase(notif.type)}"
-                     style="display: flex; align-items: flex-start; gap: 16px; padding: 20px; transition: var(--transition); position: relative; border-left: 4px solid transparent;"
+                     style="display: flex; align-items: flex-start; gap: 16px; padding: 20px; transition: var(--transition); position: relative; border-left: 4px solid transparent; margin-bottom: 0;"
                      th:styleappend="${notif.read ? '' : 'border-left-color: var(--accent-primary);'}">
                      
                     <!-- Dynamic Icon based on type -->
@@ -161,6 +159,27 @@
             activeTab.style.borderColor = 'var(--accent-primary)';
         }
     });
+
+    function updateClock() {
+        const el = document.getElementById('clock');
+        if (el) el.textContent = new Date().toLocaleTimeString('en-IN', {hour:'2-digit', minute:'2-digit'});
+    }
+    updateClock(); setInterval(updateClock, 1000);
+
+    function toggleSidebar() {
+        document.getElementById('sidebar').classList.toggle('open');
+        let overlay = document.querySelector('.sidebar-overlay');
+        if (!overlay) {
+            overlay = document.createElement('div');
+            overlay.className = 'sidebar-overlay';
+            overlay.onclick = function() {
+                document.getElementById('sidebar').classList.remove('open');
+                overlay.classList.remove('show');
+            };
+            document.body.appendChild(overlay);
+        }
+        overlay.classList.toggle('show');
+    }
 </script>
 </body>
 </html>

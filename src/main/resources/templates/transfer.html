@@ -1,130 +1,171 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-    <link rel="stylesheet" th:href="@{/css/global.css}"/>
-    <title>Fund Transfer</title>
     <meta charset="UTF-8"/>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f2f8; min-height: 100vh; }
-        .navbar { background: #1a237e; color: white; padding: 0 30px; height: 64px; display: flex; align-items: center; justify-content: space-between; }
-        .nav-left { display: flex; align-items: center; gap: 12px; }
-        .nav-logo { width: 38px; height: 38px; background: rgba(255,255,255,0.15); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; }
-        .nav-title { font-size: 18px; font-weight: 700; }
-        .btn-logout { padding: 8px 18px; background: #e53935; color: white; border: none; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; text-decoration: none; }
-        .tabs { background: white; border-bottom: 1px solid #e0e0e0; padding: 0 30px; display: flex; gap: 4px; }
-        .tab { padding: 16px 20px; font-size: 14px; font-weight: 500; color: #777; text-decoration: none; border-bottom: 2px solid transparent; }
-        .tab:hover { color: #1a237e; }
-        .tab.active { color: #1a237e; border-bottom-color: #1a237e; }
-        .main { padding: 30px; max-width: 700px; margin: 0 auto; }
-        .page-title { font-size: 22px; font-weight: 700; color: #1a1a2e; margin-bottom: 6px; }
-        .page-sub { font-size: 13px; color: #888; margin-bottom: 24px; }
-        .balance-bar { background: linear-gradient(135deg, #1a237e, #283593); color: white; padding: 20px 24px; border-radius: 12px; margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center; }
-        .balance-bar span { font-size: 13px; opacity: 0.8; }
-        .balance-bar strong { font-size: 24px; font-weight: 700; }
-        .card { background: white; border-radius: 12px; border: 0.5px solid #e8e8e8; padding: 28px; }
-        .alert { padding: 10px 14px; border-radius: 8px; font-size: 13px; margin-bottom: 16px; }
-        .alert-error { background: #fff3f3; border: 1px solid #ffcdd2; color: #c62828; }
-        .alert-success { background: #f1f8e9; border: 1px solid #c5e1a5; color: #2e7d32; }
-        label { font-size: 12px; font-weight: 600; color: #444; display: block; margin-bottom: 6px; }
-        .input-group { margin-bottom: 18px; }
-        input, select { width: 100%; padding: 12px 16px; border: 1.5px solid #e0e0e0; border-radius: 8px; font-size: 14px; color: #333; outline: none; background: #fafafa; }
-        input:focus, select:focus { border-color: #1a237e; background: #fff; }
-        .amount-wrap { position: relative; }
-        .amount-prefix { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); font-weight: 700; color: #1a237e; font-size: 15px; }
-        .amount-wrap input { padding-left: 34px; }
-        .quick-amounts { display: flex; gap: 8px; margin-bottom: 18px; }
-        .quick-btn { flex: 1; padding: 8px; border: 1.5px solid #e8ecff; border-radius: 8px; font-size: 12px; font-weight: 600; color: #1a237e; background: white; cursor: pointer; }
-        .quick-btn:hover { background: #f5f6ff; border-color: #1a237e; }
-        .divider { border: none; border-top: 1px solid #f0f0f0; margin: 20px 0; }
-        .btn { width: 100%; padding: 13px; border: none; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer; background: #1a237e; color: white; margin-top: 4px; }
-        .btn:hover { background: #283593; }
-        .security-note { display: flex; align-items: center; gap: 8px; font-size: 12px; color: #888; margin-top: 14px; justify-content: center; }
-    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Fund Transfer — SecureBank</title>
+    <link rel="stylesheet" th:href="@{/css/premium.css}"/>
 </head>
 <body>
 <script th:src="@{/js/global.js}"></script>
-<div class="navbar">
-    <div class="nav-left">
-        <div class="nav-logo">🏦</div>
-        <span class="nav-title">SecureBank</span>
+
+<!-- ══ SIDEBAR ══ -->
+<div class="premium-sidebar" id="sidebar">
+    <div class="sidebar-logo">
+        <div class="logo-icon">🏦</div>
+        <span class="logo-text">SecureBank</span>
     </div>
-    <div style="display:flex;align-items:center;gap:14px">
-        <span style="font-size:14px" th:text="${session.user.name}">User</span>
-        <a href="/logout" class="btn-logout">Logout</a>
+    <div class="sidebar-user-card">
+        <div class="user-avatar" th:text="${session.user.name != null ? session.user.name.substring(0,1) : 'U'}">U</div>
+        <div class="user-name" th:text="${session.user.name}">User</div>
+        <div class="user-email" th:text="${session.user.email}">user@email.com</div>
+        <span class="user-badge">● ACTIVE</span>
+    </div>
+    <nav>
+        <div class="nav-section-label">Main Menu</div>
+        <a href="/customer/dashboard" class="premium-nav-item"><span class="nav-icon">📊</span> Dashboard</a>
+        <a href="/customer/transfer" class="premium-nav-item active"><span class="nav-icon">💸</span> Fund Transfer</a>
+        <a href="/customer/transactions" class="premium-nav-item"><span class="nav-icon">📋</span> Transactions</a>
+        <a href="/customer/upi" class="premium-nav-item"><span class="nav-icon">📲</span> UPI Payments</a>
+        <a href="/customer/loans" class="premium-nav-item"><span class="nav-icon">🏠</span> Loans</a>
+        <a href="/customer/bills" class="premium-nav-item"><span class="nav-icon">🧾</span> Pay Bills</a>
+
+        <div class="nav-section-label">Account</div>
+        <a href="/customer/beneficiaries" class="premium-nav-item"><span class="nav-icon">👥</span> Beneficiaries</a>
+        <a href="/customer/card" class="premium-nav-item"><span class="nav-icon">💳</span> Cards</a>
+        <a href="/customer/statement" class="premium-nav-item"><span class="nav-icon">📄</span> Statement</a>
+        <a href="/customer/fd" class="premium-nav-item"><span class="nav-icon">🏦</span> Fixed Deposits</a>
+        <a href="/customer/rd" class="premium-nav-item"><span class="nav-icon">💰</span> Recurring Deposits</a>
+        <a href="/customer/cheque" class="premium-nav-item"><span class="nav-icon">📝</span> Cheque Book</a>
+        <a href="/customer/standing-instructions" class="premium-nav-item"><span class="nav-icon">🔄</span> Standing Orders</a>
+
+        <div class="nav-section-label">Services</div>
+        <a href="/customer/currency" class="premium-nav-item"><span class="nav-icon">💱</span> Currency</a>
+        <a href="/customer/nominee" class="premium-nav-item"><span class="nav-icon">👤</span> Nominee</a>
+        <a href="/customer/kyc" class="premium-nav-item"><span class="nav-icon">🪪</span> KYC</a>
+        <a href="/customer/insights" class="premium-nav-item"><span class="nav-icon">🧠</span> Insights</a>
+        <a href="/customer/notifications" class="premium-nav-item"><span class="nav-icon">🔔</span> Notifications</a>
+
+        <div class="nav-section-label">Support</div>
+        <a href="/customer/complaints" class="premium-nav-item"><span class="nav-icon">📩</span> Complaints</a>
+        <a href="/customer/service-request" class="premium-nav-item"><span class="nav-icon">🛎️</span> Service Request</a>
+        <a href="/customer/help" class="premium-nav-item"><span class="nav-icon">❓</span> Help</a>
+        <a href="/customer/profile" class="premium-nav-item"><span class="nav-icon">⚙️</span> Profile</a>
+    </nav>
+    <div class="sidebar-bottom">
+        <a href="/logout" class="btn-logout">🚪 Sign Out</a>
     </div>
 </div>
 
-<div class="tabs">
-    <a href="/customer/dashboard" class="tab">📊 Overview</a>
-    <a href="/customer/transfer" class="tab active">💸 Fund Transfer</a>
-    <a href="/customer/transactions" class="tab">📋 Transactions</a>
-    <a href="/customer/loans" class="tab">🏠 Loans</a>
-    <a href="/customer/profile" class="tab">👤 Profile</a>
-</div>
-
-<div class="main">
-    <h2 class="page-title">💸 Fund Transfer</h2>
-    <p class="page-sub">Transfer money securely to any account</p>
-
-    <div class="balance-bar">
-        <div>
-            <span>Available Balance</span><br/>
-            <strong>Rs. <span th:text="${#numbers.formatDecimal(account.balance, 1, 2, 'POINT')}">50,000.00</span></strong>
-        </div>
-        <div style="text-align:right">
-            <span>Account</span><br/>
-            <strong style="font-size:15px" th:text="${account.accountNumber}">1001-0000-0001</strong>
+<!-- ══ MAIN CONTENT ══ -->
+<div class="premium-main">
+    <!-- Top Bar -->
+    <div class="premium-topbar">
+        <button class="mobile-menu-btn" onclick="toggleSidebar()">☰</button>
+        <span class="topbar-greeting">Good day, <span th:text="${session.user.name}">User</span> 👋</span>
+        <div class="topbar-actions">
+            <button class="topbar-btn" onclick="toggleDarkMode()" title="Toggle Theme">🌙</button>
+            <span class="topbar-clock" id="clock"></span>
+            <a href="/customer/notifications" class="topbar-btn" title="Notifications">
+                🔔<div class="notification-badge"></div>
+            </a>
         </div>
     </div>
 
-    <div class="card">
-        <div th:if="${error}" class="alert alert-error" th:text="${error}"></div>
-        <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
-
-        <form method="post" action="/customer/transfer">
-            <div class="input-group">
-                <label>Recipient Account Number</label>
-                <input type="text" name="toAccount" placeholder="Enter 16-digit account number" required maxlength="16"/>
+    <!-- Content -->
+    <div class="premium-content">
+        <div class="premium-card" style="margin-bottom: 24px;">
+            <div class="premium-card-header">
+                <h3 class="premium-card-title">Available Balance</h3>
             </div>
-            <div class="input-group">
-                <label>Transfer Type</label>
-                <select name="transferType">
-                    <option value="NEFT">NEFT — National Electronic Funds Transfer</option>
-                    <option value="RTGS">RTGS — Real Time Gross Settlement</option>
-                    <option value="IMPS">IMPS — Immediate Payment Service</option>
-                </select>
-            </div>
-            <div class="input-group">
-                <label>Amount (Rs.)</label>
-                <div class="amount-wrap">
-                    <span class="amount-prefix">₹</span>
-                    <input type="number" name="amount" id="amountInput" placeholder="0.00" min="1" required/>
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <span style="opacity: 0.8; font-size: 14px;">Savings Account</span><br/>
+                    <strong style="font-size: 24px;">Rs. <span th:text="${#numbers.formatDecimal(account.balance, 1, 2, 'POINT')}">50,000.00</span></strong>
+                </div>
+                <div style="text-align:right">
+                    <span style="opacity: 0.8; font-size: 14px;">Account Number</span><br/>
+                    <strong style="font-size: 16px;" th:text="${account.accountNumber}">1001-0000-0001</strong>
                 </div>
             </div>
-            <div class="quick-amounts">
-                <button type="button" class="quick-btn" onclick="setAmount(500)">₹500</button>
-                <button type="button" class="quick-btn" onclick="setAmount(1000)">₹1,000</button>
-                <button type="button" class="quick-btn" onclick="setAmount(5000)">₹5,000</button>
-                <button type="button" class="quick-btn" onclick="setAmount(10000)">₹10,000</button>
+        </div>
+
+        <div class="premium-card">
+            <div class="premium-card-header">
+                <h3 class="premium-card-title">💸 Fund Transfer</h3>
             </div>
-            <div class="input-group">
-                <label>Remarks (Optional)</label>
-                <input type="text" name="remarks" placeholder="e.g. Rent, Fees, Gift..."/>
-            </div>
-            <div class="input-group">
-                <label>Transaction PIN (T-PIN) *</label>
-                <input type="password" name="tPin" placeholder="4-digit T-PIN" required maxlength="4" style="letter-spacing: 6px; text-align: center; font-size: 18px; font-weight: 700;"/>
-            </div>
-            <hr class="divider"/>
-            <button type="submit" class="btn">Transfer Money →</button>
-            <p class="security-note">🔒 Secured with 256-bit encryption</p>
-        </form>
+            
+            <div th:if="${error}" class="premium-alert premium-alert-error" th:text="${error}"></div>
+            <div th:if="${success}" class="premium-alert premium-alert-success" th:text="${success}"></div>
+
+            <form method="post" action="/customer/transfer">
+                <div style="margin-bottom: 18px;">
+                    <label class="premium-label">Recipient Account Number</label>
+                    <input class="premium-input" type="text" name="toAccount" placeholder="Enter 16-digit account number" required maxlength="16"/>
+                </div>
+                <div style="margin-bottom: 18px;">
+                    <label class="premium-label">Transfer Type</label>
+                    <select class="premium-select" name="transferType">
+                        <option value="NEFT">NEFT — National Electronic Funds Transfer</option>
+                        <option value="RTGS">RTGS — Real Time Gross Settlement</option>
+                        <option value="IMPS">IMPS — Immediate Payment Service</option>
+                    </select>
+                </div>
+                <div style="margin-bottom: 18px;">
+                    <label class="premium-label">Amount (Rs.)</label>
+                    <div style="position: relative;">
+                        <span style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); font-weight: 700; color: var(--primary);">₹</span>
+                        <input class="premium-input" type="number" name="amount" id="amountInput" placeholder="0.00" min="1" required style="padding-left: 34px;"/>
+                    </div>
+                </div>
+                <div style="display: flex; gap: 8px; margin-bottom: 18px;">
+                    <button type="button" class="premium-btn" style="flex: 1; padding: 8px; background: transparent; color: var(--primary); border: 1px solid var(--primary);" onclick="setAmount(500)">₹500</button>
+                    <button type="button" class="premium-btn" style="flex: 1; padding: 8px; background: transparent; color: var(--primary); border: 1px solid var(--primary);" onclick="setAmount(1000)">₹1,000</button>
+                    <button type="button" class="premium-btn" style="flex: 1; padding: 8px; background: transparent; color: var(--primary); border: 1px solid var(--primary);" onclick="setAmount(5000)">₹5,000</button>
+                    <button type="button" class="premium-btn" style="flex: 1; padding: 8px; background: transparent; color: var(--primary); border: 1px solid var(--primary);" onclick="setAmount(10000)">₹10,000</button>
+                </div>
+                <div style="margin-bottom: 18px;">
+                    <label class="premium-label">Remarks (Optional)</label>
+                    <input class="premium-input" type="text" name="remarks" placeholder="e.g. Rent, Fees, Gift..."/>
+                </div>
+                <div style="margin-bottom: 18px;">
+                    <label class="premium-label">Transaction PIN (T-PIN) *</label>
+                    <input class="premium-input" type="password" name="tPin" placeholder="4-digit T-PIN" required maxlength="4" style="letter-spacing: 6px; text-align: center; font-size: 18px; font-weight: 700;"/>
+                </div>
+                <hr style="border: none; border-top: 1px solid var(--border); margin: 20px 0;"/>
+                <button type="submit" class="premium-btn" style="width: 100%;">Transfer Money →</button>
+                <p style="text-align: center; font-size: 12px; opacity: 0.7; margin-top: 14px;">🔒 Secured with 256-bit encryption</p>
+            </form>
+        </div>
     </div>
 </div>
+
 <script>
     function setAmount(val) {
         document.getElementById('amountInput').value = val;
+    }
+
+    // Live clock
+    function updateClock() {
+        const el = document.getElementById('clock');
+        if (el) el.textContent = new Date().toLocaleTimeString('en-IN', {hour:'2-digit', minute:'2-digit'});
+    }
+    updateClock(); setInterval(updateClock, 1000);
+
+    // Mobile sidebar toggle
+    function toggleSidebar() {
+        document.getElementById('sidebar').classList.toggle('open');
+        let overlay = document.querySelector('.sidebar-overlay');
+        if (!overlay) {
+            overlay = document.createElement('div');
+            overlay.className = 'sidebar-overlay';
+            overlay.onclick = function() {
+                document.getElementById('sidebar').classList.remove('open');
+                overlay.classList.remove('show');
+            };
+            document.body.appendChild(overlay);
+        }
+        overlay.classList.toggle('show');
     }
 </script>
 </body>

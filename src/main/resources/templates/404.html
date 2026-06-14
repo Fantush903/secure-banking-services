@@ -1,29 +1,26 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <link rel="stylesheet" th:href="@{/css/global.css}"/>
-    <title>Page Not Found</title>
+    <link rel="stylesheet" th:href="@{/css/premium.css}"/>
+    <link rel="stylesheet" th:href="@{/css/premium-auth.css}"/>
+    <title>Page Not Found — SecureBank</title>
     <meta charset="UTF-8"/>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Segoe UI', Arial, sans-serif; background: #0a0f1e; display: flex; justify-content: center; align-items: center; min-height: 100vh; color: white; text-align: center; }
-        .container { }
-        .code { font-size: 100px; font-weight: 900; color: #1a237e; line-height: 1; }
-        .icon { font-size: 60px; margin: 10px 0; }
-        h2 { font-size: 24px; font-weight: 700; margin-bottom: 10px; }
-        p { font-size: 14px; opacity: 0.7; margin-bottom: 28px; }
-        a { display: inline-block; padding: 12px 28px; background: #1a237e; color: white; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 14px; }
-        a:hover { background: #283593; }
-    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 </head>
 <body>
 <script th:src="@{/js/global.js}"></script>
-<div class="container">
-    <div class="code">404</div>
-    <div class="icon">🔍</div>
-    <h2>Page Not Found</h2>
-    <p>The page you're looking for doesn't exist or has been moved.</p>
-    <a href="/login">← Back to Login</a>
+
+<div class="auth-wrapper">
+    <div style="max-width:480px;width:100%;">
+        <div class="premium-card animate-in" style="padding:48px 40px;text-align:center;">
+            <div style="font-size:100px;font-weight:900;background:var(--accent-gradient);-webkit-background-clip:text;-webkit-text-fill-color:transparent;line-height:1;margin-bottom:16px;text-shadow:var(--accent-glow);">404</div>
+            <div style="font-size:48px;margin-bottom:20px;">🔍</div>
+            <h2 style="font-size:24px;font-weight:700;color:var(--text-white);margin-bottom:12px;">Page Not Found</h2>
+            <p style="font-size:14px;color:var(--text-muted);margin-bottom:32px;line-height:1.6;">The page you're looking for doesn't exist, has been moved, or you don't have permission to view it.</p>
+            <a href="/login" class="premium-btn" style="display:inline-block;width:auto;padding:14px 32px;">← Back to Safety</a>
+        </div>
+    </div>
 </div>
+
 </body>
 </html>

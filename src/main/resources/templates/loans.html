@@ -1,79 +1,90 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-    <link rel="stylesheet" th:href="@{/css/global.css}"/>
-    <title>Loans</title>
     <meta charset="UTF-8"/>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f2f8; min-height: 100vh; }
-        .navbar { background: #1a237e; color: white; padding: 0 30px; height: 64px; display: flex; align-items: center; justify-content: space-between; }
-        .nav-left { display: flex; align-items: center; gap: 12px; }
-        .nav-logo { width: 38px; height: 38px; background: rgba(255,255,255,0.15); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; }
-        .nav-title { font-size: 18px; font-weight: 700; }
-        .btn-logout { padding: 8px 18px; background: #e53935; color: white; border: none; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; text-decoration: none; }
-        .tabs { background: white; border-bottom: 1px solid #e0e0e0; padding: 0 30px; display: flex; gap: 4px; }
-        .tab { padding: 16px 20px; font-size: 14px; font-weight: 500; color: #777; text-decoration: none; border-bottom: 2px solid transparent; }
-        .tab:hover { color: #1a237e; }
-        .tab.active { color: #1a237e; border-bottom-color: #1a237e; }
-        .main { padding: 30px; max-width: 900px; margin: 0 auto; }
-        .page-title { font-size: 22px; font-weight: 700; color: #1a1a2e; margin-bottom: 6px; }
-        .page-sub { font-size: 13px; color: #888; margin-bottom: 24px; }
-        .loan-types { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 28px; }
-        .loan-type-card { background: white; border-radius: 12px; padding: 20px; border: 2px solid #e8e8e8; cursor: pointer; transition: all 0.2s; text-align: center; }
-        .loan-type-card:hover, .loan-type-card.selected { border-color: #1a237e; background: #f5f6ff; }
-        .loan-type-card .icon { font-size: 30px; margin-bottom: 10px; }
-        .loan-type-card h4 { font-size: 14px; font-weight: 600; color: #1a1a2e; margin-bottom: 4px; }
-        .loan-type-card p { font-size: 12px; color: #888; }
-        .loan-type-card .rate { font-size: 13px; color: #1a237e; font-weight: 700; margin-top: 8px; }
-        .card { background: white; border-radius: 12px; border: 0.5px solid #e8e8e8; padding: 28px; margin-bottom: 20px; }
-        .card h3 { font-size: 16px; font-weight: 600; color: #1a1a2e; margin-bottom: 20px; }
-        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-        label { font-size: 12px; font-weight: 600; color: #444; display: block; margin-bottom: 6px; }
-        .input-group { margin-bottom: 4px; }
-        input, select { width: 100%; padding: 12px 16px; border: 1.5px solid #e0e0e0; border-radius: 8px; font-size: 14px; color: #333; outline: none; background: #fafafa; }
-        input:focus, select:focus { border-color: #1a237e; background: #fff; }
-        .emi-box { background: #f5f6ff; border: 1px solid #e8ecff; border-radius: 10px; padding: 16px 20px; margin: 20px 0; display: flex; justify-content: space-between; }
-        .emi-item { text-align: center; }
-        .emi-label { font-size: 11px; color: #888; font-weight: 600; text-transform: uppercase; margin-bottom: 4px; }
-        .emi-value { font-size: 18px; font-weight: 700; color: #1a237e; }
-        .btn { padding: 13px 28px; border: none; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer; background: #1a237e; color: white; margin-top: 8px; }
-        .btn:hover { background: #283593; }
-        .alert { padding: 10px 14px; border-radius: 8px; font-size: 13px; margin-bottom: 16px; }
-        .alert-success { background: #f1f8e9; border: 1px solid #c5e1a5; color: #2e7d32; }
-        .alert-error { background: #fff3f3; border: 1px solid #ffcdd2; color: #c62828; }
-        .empty-state { text-align: center; padding: 40px; color: #bbb; }
-    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Loans — SecureBank</title>
+    <link rel="stylesheet" th:href="@{/css/premium.css}"/>
 </head>
 <body>
 <script th:src="@{/js/global.js}"></script>
-<div class="navbar">
-    <div class="nav-left">
-        <div class="nav-logo">🏦</div>
-        <span class="nav-title">SecureBank</span>
-        <button class="mobile-menu-btn" onclick="">☰</button>
-        <button class="dark-mode-toggle" onclick="toggleDarkMode()">🌙</button>
+
+
+<!-- ══ SIDEBAR ══ -->
+<div class="premium-sidebar" id="sidebar">
+    <div class="sidebar-logo">
+        <div class="logo-icon">🏦</div>
+        <span class="logo-text">SecureBank</span>
     </div>
-    <div style="display:flex;align-items:center;gap:14px">
-        <span style="font-size:14px" th:text="${session.user.name}">User</span>
-        <a href="/logout" class="btn-logout">Logout</a>
+    <div class="sidebar-user-card">
+        <div class="user-avatar" th:text="${session.user.name != null ? session.user.name.substring(0,1) : 'U'}">U</div>
+        <div class="user-name" th:text="${session.user.name}">User</div>
+        <div class="user-email" th:text="${session.user.email}">user@email.com</div>
+        <span class="user-badge">● ACTIVE</span>
+    </div>
+    <nav>
+        <div class="nav-section-label">Main Menu</div>
+        <a href="/customer/dashboard" class="premium-nav-item"><span class="nav-icon">📊</span> Dashboard</a>
+        <a href="/customer/transfer" class="premium-nav-item"><span class="nav-icon">💸</span> Fund Transfer</a>
+        <a href="/customer/transactions" class="premium-nav-item"><span class="nav-icon">📋</span> Transactions</a>
+        <a href="/customer/upi" class="premium-nav-item"><span class="nav-icon">📲</span> UPI Payments</a>
+        <a href="/customer/loans" class="premium-nav-item"><span class="nav-icon">🏠</span> Loans</a>
+        <a href="/customer/bills" class="premium-nav-item"><span class="nav-icon">🧾</span> Pay Bills</a>
+
+        <div class="nav-section-label">Account</div>
+        <a href="/customer/beneficiaries" class="premium-nav-item"><span class="nav-icon">👥</span> Beneficiaries</a>
+        <a href="/customer/card" class="premium-nav-item"><span class="nav-icon">💳</span> Cards</a>
+        <a href="/customer/statement" class="premium-nav-item"><span class="nav-icon">📄</span> Statement</a>
+        <a href="/customer/fd" class="premium-nav-item"><span class="nav-icon">🏦</span> Fixed Deposits</a>
+        <a href="/customer/rd" class="premium-nav-item"><span class="nav-icon">💰</span> Recurring Deposits</a>
+        <a href="/customer/cheque" class="premium-nav-item"><span class="nav-icon">📝</span> Cheque Book</a>
+        <a href="/customer/standing-instructions" class="premium-nav-item"><span class="nav-icon">🔄</span> Standing Orders</a>
+
+        <div class="nav-section-label">Services</div>
+        <a href="/customer/currency" class="premium-nav-item"><span class="nav-icon">💱</span> Currency</a>
+        <a href="/customer/nominee" class="premium-nav-item"><span class="nav-icon">👤</span> Nominee</a>
+        <a href="/customer/kyc" class="premium-nav-item"><span class="nav-icon">🪪</span> KYC</a>
+        <a href="/customer/insights" class="premium-nav-item"><span class="nav-icon">🧠</span> Insights</a>
+        <a href="/customer/notifications" class="premium-nav-item"><span class="nav-icon">🔔</span> Notifications</a>
+
+        <div class="nav-section-label">Support</div>
+        <a href="/customer/complaints" class="premium-nav-item"><span class="nav-icon">📩</span> Complaints</a>
+        <a href="/customer/service-request" class="premium-nav-item"><span class="nav-icon">🛎️</span> Service Request</a>
+        <a href="/customer/help" class="premium-nav-item"><span class="nav-icon">❓</span> Help</a>
+        <a href="/customer/profile" class="premium-nav-item"><span class="nav-icon">⚙️</span> Profile</a>
+    </nav>
+    <div class="sidebar-bottom">
+        <a href="/logout" class="btn-logout">🚪 Sign Out</a>
     </div>
 </div>
 
-<div class="tabs">
-    <a href="/customer/dashboard" class="tab">📊 Overview</a>
-    <a href="/customer/transfer" class="tab">💸 Fund Transfer</a>
-    <a href="/customer/transactions" class="tab">📋 Transactions</a>
-    <a href="/customer/loans" class="tab active">🏠 Loans</a>
-    <a href="/customer/profile" class="tab">👤 Profile</a>
-</div>
 
-<div class="main">
+
+<!-- ══ MAIN CONTENT ══ -->
+<div class="premium-main">
+    <div class="premium-topbar">
+        <div class="topbar-greeting">
+            Control Panel
+        </div>
+        <div class="topbar-actions">
+            <button class="topbar-btn" onclick="document.body.dataset.theme = document.body.dataset.theme === 'light' ? 'dark' : 'light'" title="Toggle Theme">🌙</button>
+            <button class="topbar-btn notification-btn" title="Notifications">
+                🔔<span class="notification-badge"></span>
+            </button>
+            <div class="topbar-clock" id="liveClock">00:00:00</div>
+            <button class="mobile-menu-btn" onclick="document.getElementById('sidebar').classList.toggle('open')">☰</button>
+        </div>
+    </div>
+    
+    <div class="premium-content">
+        <div class="premium-card" style="padding: 24px;">
+
+            
     <h2 class="page-title">🏠 Loan Services</h2>
     <p class="page-sub">Apply for a loan at competitive interest rates</p>
 
-    <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
-    <div th:if="${error}" class="alert alert-error" th:text="${error}"></div>
+    <div th:if="${success}" class="alert premium-alert premium-alert-success" th:text="${success}"></div>
+    <div th:if="${error}" class="alert premium-alert premium-alert-error" th:text="${error}"></div>
 
     <!-- Loan Types -->
     <div class="loan-types">
@@ -98,18 +109,18 @@
     </div>
 
     <!-- Apply Form -->
-    <div class="card">
+    <div class="premium-card">
         <h3>📋 Apply for Loan</h3>
         <form method="post" action="/customer/apply-loan">
-            <input type="hidden" name="loanType" id="loanTypeInput" value="HOME"/>
+            <input class="premium-input" type="hidden" name="loanType" id="loanTypeInput" value="HOME"/>
             <div class="form-grid">
                 <div class="input-group">
                     <label>Loan Amount (Rs.)</label>
-                    <input type="number" name="amount" id="loanAmount" placeholder="e.g. 500000" min="10000" required oninput="calcEMI()"/>
+                    <input class="premium-input" type="number" name="amount" id="loanAmount" placeholder="e.g. 500000" min="10000" required oninput="calcEMI()"/>
                 </div>
                 <div class="input-group">
                     <label>Tenure (Months)</label>
-                    <select name="tenure" id="tenure" onchange="calcEMI()">
+                    <select class="premium-select" name="tenure" id="tenure" onchange="calcEMI()">
                         <option value="12">12 months (1 year)</option>
                         <option value="24">24 months (2 years)</option>
                         <option value="36" selected>36 months (3 years)</option>
@@ -120,11 +131,11 @@
                 </div>
                 <div class="input-group">
                     <label>Purpose</label>
-                    <input type="text" name="purpose" placeholder="Briefly describe the purpose"/>
+                    <input class="premium-input" type="text" name="purpose" placeholder="Briefly describe the purpose"/>
                 </div>
                 <div class="input-group">
                     <label>Monthly Income (Rs.)</label>
-                    <input type="number" name="income" placeholder="Your monthly income"/>
+                    <input class="premium-input" type="number" name="income" placeholder="Your monthly income"/>
                 </div>
             </div>
 
@@ -143,12 +154,12 @@
                 </div>
             </div>
 
-            <button type="submit" class="btn">Apply for Loan →</button>
+            <button type="submit" class="premium-btn">Apply for Loan →</button>
         </form>
     </div>
 
     <!-- Existing Loans -->
-    <div class="card">
+    <div class="premium-card">
         <h3>📊 My Loan Applications</h3>
         <div class="empty-state">
             <div style="font-size:36px;margin-bottom:10px">📭</div>
@@ -178,5 +189,9 @@
         }
     }
 </script>
+
+        </div>
+    </div>
+</div>
 </body>
 </html>

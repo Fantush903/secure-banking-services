@@ -1,97 +1,89 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-    <link rel="stylesheet" th:href="@{/css/global.css}"/>
-    <title>UPI Payment — SecureBank</title>
     <meta charset="UTF-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f2f8; min-height: 100vh; display: flex; }
-        .sidebar { width: 240px; background: #1a237e; min-height: 100vh; display: flex; flex-direction: column; flex-shrink: 0; position: fixed; top: 0; left: 0; height: 100%; z-index: 100; }
-        .sidebar-logo { padding: 24px 20px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid rgba(255,255,255,0.1); }
-        .sidebar-logo-icon { width: 40px; height: 40px; background: rgba(255,255,255,0.15); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; }
-        .sidebar-logo-text { font-size: 17px; font-weight: 700; color: white; }
-        .sidebar-nav { flex: 1; padding: 16px 0; overflow-y: auto; }
-        .nav-section { padding: 8px 20px 4px; font-size: 10px; font-weight: 700; color: rgba(255,255,255,0.4); text-transform: uppercase; letter-spacing: 1px; }
-        .nav-item { display: flex; align-items: center; gap: 12px; padding: 12px 20px; font-size: 14px; color: rgba(255,255,255,0.75); text-decoration: none; transition: all 0.2s; border-left: 3px solid transparent; }
-        .nav-item:hover { background: rgba(255,255,255,0.08); color: white; }
-        .nav-item.active { background: rgba(255,255,255,0.12); color: white; border-left-color: white; font-weight: 600; }
-        .nav-icon { font-size: 18px; width: 22px; text-align: center; }
-        .sidebar-bottom { padding: 16px 20px; border-top: 1px solid rgba(255,255,255,0.1); }
-        .btn-logout { width: 100%; padding: 10px; background: rgba(229,57,53,0.2); color: #ef9a9a; border: 1px solid rgba(229,57,53,0.3); border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 8px; }
-        .main { margin-left: 240px; flex: 1; }
-        .topbar { background: white; padding: 0 30px; height: 64px; display: flex; align-items: center; border-bottom: 1px solid #e8e8e8; position: sticky; top: 0; z-index: 50; }
-        .topbar-title { font-size: 18px; font-weight: 700; color: #1a1a2e; }
-        .content { padding: 28px 30px; max-width: 800px; }
-        .upi-hero { background: linear-gradient(135deg, #4a148c, #7b1fa2); color: white; border-radius: 16px; padding: 28px; margin-bottom: 24px; display: flex; align-items: center; gap: 24px; }
-        .upi-logo { width: 80px; height: 80px; background: white; border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 36px; flex-shrink: 0; }
-        .upi-info h2 { font-size: 22px; font-weight: 700; margin-bottom: 6px; }
-        .upi-info p { font-size: 13px; opacity: 0.8; }
-        .upi-id-box { background: rgba(255,255,255,0.15); border-radius: 10px; padding: 10px 16px; margin-top: 12px; display: inline-flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 600; }
-        .tabs { display: flex; gap: 8px; margin-bottom: 20px; }
-        .tab-btn { padding: 10px 22px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; border: 0.5px solid #e8e8e8; background: white; color: #666; transition: all 0.2s; }
-        .tab-btn.active { background: #4a148c; color: white; border-color: #4a148c; }
-        .card { background: white; border-radius: 14px; border: 0.5px solid #e8e8e8; padding: 24px; margin-bottom: 20px; }
-        .card h3 { font-size: 15px; font-weight: 600; color: #1a1a2e; margin-bottom: 18px; }
-        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-        label { font-size: 12px; font-weight: 600; color: #444; display: block; margin-bottom: 5px; }
-        input, select { width: 100%; padding: 12px 14px; border: 1.5px solid #e0e0e0; border-radius: 8px; font-size: 14px; color: #333; outline: none; background: #fafafa; }
-        input:focus, select:focus { border-color: #7b1fa2; background: #fff; }
-        .input-group { margin-bottom: 4px; }
-        .upi-verify { display: flex; gap: 8px; }
-        .upi-verify input { flex: 1; }
-        .btn-verify { padding: 12px 18px; background: #f3e5f5; color: #7b1fa2; border: none; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap; }
-        .verified-badge { display: inline-flex; align-items: center; gap: 6px; background: #e8f5e9; color: #2e7d32; padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; margin-top: 6px; }
-        .quick-amounts { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
-        .quick-btn { padding: 8px 16px; border: 1.5px solid #e8e8e8; border-radius: 8px; font-size: 12px; font-weight: 600; color: #7b1fa2; background: white; cursor: pointer; }
-        .quick-btn:hover { background: #f3e5f5; border-color: #7b1fa2; }
-        .btn { width: 100%; padding: 13px; border: none; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer; background: #4a148c; color: white; margin-top: 8px; }
-        .btn:hover { background: #6a1b9a; }
-        .alert { padding: 10px 14px; border-radius: 8px; font-size: 13px; margin-bottom: 16px; }
-        .alert-success { background: #f1f8e9; border: 1px solid #c5e1a5; color: #2e7d32; }
-        .alert-error { background: #fff3f3; border: 1px solid #ffcdd2; color: #c62828; }
-        .recent-grid { display: flex; flex-direction: column; gap: 10px; }
-        .recent-item { display: flex; align-items: center; gap: 14px; padding: 12px; background: #fafafa; border-radius: 10px; cursor: pointer; transition: background 0.2s; }
-        .recent-item:hover { background: #f3e5f5; }
-        .recent-avatar { width: 40px; height: 40px; border-radius: 50%; background: #e8eaf6; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 700; color: #4a148c; flex-shrink: 0; }
-        .recent-name { font-size: 13px; font-weight: 600; color: #333; }
-        .recent-upi { font-size: 11px; color: #888; }
-        .tab-panel { display: none; }
-        .tab-panel.active { display: block; }
-    </style>
+    <title>Upi — SecureBank</title>
+    <link rel="stylesheet" th:href="@{/css/premium.css}"/>
 </head>
 <body>
 <script th:src="@{/js/global.js}"></script>
-<div class="sidebar">
+
+
+<!-- ══ SIDEBAR ══ -->
+<div class="premium-sidebar" id="sidebar">
     <div class="sidebar-logo">
-        <div class="sidebar-logo-icon">🏦</div>
-        <span class="sidebar-logo-text">SecureBank</span>
+        <div class="logo-icon">🏦</div>
+        <span class="logo-text">SecureBank</span>
     </div>
-    <nav class="sidebar-nav">
-        <div class="nav-section">Main Menu</div>
-        <a href="/customer/dashboard" class="nav-item"><span class="nav-icon">📊</span> Dashboard</a>
-        <a href="/customer/transfer" class="nav-item"><span class="nav-icon">💸</span> Fund Transfer</a>
-        <a href="/customer/upi" class="nav-item active"><span class="nav-icon">📲</span> UPI Payment</a>
-        <a href="/customer/beneficiaries" class="nav-item"><span class="nav-icon">💳</span> Beneficiaries</a>
-        <a href="/customer/transactions" class="nav-item"><span class="nav-icon">📋</span> Transactions</a>
-        <a href="/customer/loans" class="nav-item"><span class="nav-icon">🏠</span> Loans</a>
-        <a href="/customer/bills" class="nav-item"><span class="nav-icon">💡</span> Bill Payments</a>
-        <a href="/customer/fd" class="nav-item"><span class="nav-icon">🏦</span> Fixed Deposit</a>
-        <div class="nav-section" style="margin-top:8px">Account</div>
-        <a href="/customer/profile" class="nav-item"><span class="nav-icon">👤</span> Profile</a>
-        <a href="/customer/statement" class="nav-item"><span class="nav-icon">📄</span> Statement</a>
-        <a href="/customer/help" class="nav-item"><span class="nav-icon">❓</span> Help</a>
+    <div class="sidebar-user-card">
+        <div class="user-avatar" th:text="${session.user.name != null ? session.user.name.substring(0,1) : 'U'}">U</div>
+        <div class="user-name" th:text="${session.user.name}">User</div>
+        <div class="user-email" th:text="${session.user.email}">user@email.com</div>
+        <span class="user-badge">● ACTIVE</span>
+    </div>
+    <nav>
+        <div class="nav-section-label">Main Menu</div>
+        <a href="/customer/dashboard" class="premium-nav-item"><span class="nav-icon">📊</span> Dashboard</a>
+        <a href="/customer/transfer" class="premium-nav-item"><span class="nav-icon">💸</span> Fund Transfer</a>
+        <a href="/customer/transactions" class="premium-nav-item"><span class="nav-icon">📋</span> Transactions</a>
+        <a href="/customer/upi" class="premium-nav-item"><span class="nav-icon">📲</span> UPI Payments</a>
+        <a href="/customer/loans" class="premium-nav-item"><span class="nav-icon">🏠</span> Loans</a>
+        <a href="/customer/bills" class="premium-nav-item"><span class="nav-icon">🧾</span> Pay Bills</a>
+
+        <div class="nav-section-label">Account</div>
+        <a href="/customer/beneficiaries" class="premium-nav-item"><span class="nav-icon">👥</span> Beneficiaries</a>
+        <a href="/customer/card" class="premium-nav-item"><span class="nav-icon">💳</span> Cards</a>
+        <a href="/customer/statement" class="premium-nav-item"><span class="nav-icon">📄</span> Statement</a>
+        <a href="/customer/fd" class="premium-nav-item"><span class="nav-icon">🏦</span> Fixed Deposits</a>
+        <a href="/customer/rd" class="premium-nav-item"><span class="nav-icon">💰</span> Recurring Deposits</a>
+        <a href="/customer/cheque" class="premium-nav-item"><span class="nav-icon">📝</span> Cheque Book</a>
+        <a href="/customer/standing-instructions" class="premium-nav-item"><span class="nav-icon">🔄</span> Standing Orders</a>
+
+        <div class="nav-section-label">Services</div>
+        <a href="/customer/currency" class="premium-nav-item"><span class="nav-icon">💱</span> Currency</a>
+        <a href="/customer/nominee" class="premium-nav-item"><span class="nav-icon">👤</span> Nominee</a>
+        <a href="/customer/kyc" class="premium-nav-item"><span class="nav-icon">🪪</span> KYC</a>
+        <a href="/customer/insights" class="premium-nav-item"><span class="nav-icon">🧠</span> Insights</a>
+        <a href="/customer/notifications" class="premium-nav-item"><span class="nav-icon">🔔</span> Notifications</a>
+
+        <div class="nav-section-label">Support</div>
+        <a href="/customer/complaints" class="premium-nav-item"><span class="nav-icon">📩</span> Complaints</a>
+        <a href="/customer/service-request" class="premium-nav-item"><span class="nav-icon">🛎️</span> Service Request</a>
+        <a href="/customer/help" class="premium-nav-item"><span class="nav-icon">❓</span> Help</a>
+        <a href="/customer/profile" class="premium-nav-item"><span class="nav-icon">⚙️</span> Profile</a>
     </nav>
     <div class="sidebar-bottom">
         <a href="/logout" class="btn-logout">🚪 Sign Out</a>
     </div>
 </div>
-<div class="main">
+
+
+
+<!-- ══ MAIN CONTENT ══ -->
+<div class="premium-main">
+    <div class="premium-topbar">
+        <div class="topbar-greeting">
+            Control Panel
+        </div>
+        <div class="topbar-actions">
+            <button class="topbar-btn" onclick="document.body.dataset.theme = document.body.dataset.theme === 'light' ? 'dark' : 'light'" title="Toggle Theme">🌙</button>
+            <button class="topbar-btn notification-btn" title="Notifications">
+                🔔<span class="notification-badge"></span>
+            </button>
+            <div class="topbar-clock" id="liveClock">00:00:00</div>
+            <button class="mobile-menu-btn" onclick="document.getElementById('sidebar').classList.toggle('open')">☰</button>
+        </div>
+    </div>
+    
+    <div class="premium-content">
+        <div class="premium-card" style="padding: 24px;">
+
+            
     <div class="topbar"><span class="topbar-title">📲 UPI Payment</span></div>
     <div class="content">
-        <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
-        <div th:if="${error}" class="alert alert-error" th:text="${error}"></div>
+        <div th:if="${success}" class="alert premium-alert premium-alert-success" th:text="${success}"></div>
+        <div th:if="${error}" class="alert premium-alert premium-alert-error" th:text="${error}"></div>
 
         <!-- UPI Hero -->
         <div class="upi-hero">
@@ -108,49 +100,49 @@
 
         <!-- Tabs -->
         <div class="tabs">
-            <button class="tab-btn active" onclick="showTab('send', this)">💸 Send Money</button>
-            <button class="tab-btn" onclick="showTab('request', this)">📥 Request Money</button>
-            <button class="tab-btn" onclick="showTab('scan', this)">📷 Scan QR</button>
-            <button class="tab-btn" onclick="showTab('history', this)">📋 History</button>
+            <button class="tab-premium-btn active" onclick="showTab('send', this)">💸 Send Money</button>
+            <button class="tab-premium-btn" onclick="showTab('request', this)">📥 Request Money</button>
+            <button class="tab-premium-btn" onclick="showTab('scan', this)">📷 Scan QR</button>
+            <button class="tab-premium-btn" onclick="showTab('history', this)">📋 History</button>
         </div>
 
         <!-- Send Money -->
         <div id="tab-send" class="tab-panel active">
-            <div class="card">
+            <div class="premium-card">
                 <h3>💸 Send via UPI ID</h3>
                 <form method="post" action="/customer/upi-send">
                     <div class="input-group" style="margin-bottom:14px">
                         <label>Recipient UPI ID *</label>
                         <div class="upi-verify">
-                            <input type="text" name="toUpiId" id="upiInput" placeholder="name@bankname or mobile@upi" required/>
-                            <button type="button" class="btn-verify" onclick="verifyUPI()">Verify</button>
+                            <input class="premium-input" type="text" name="toUpiId" id="upiInput" placeholder="name@bankname or mobile@upi" required/>
+                            <button type="button" class="premium-btn-verify" onclick="verifyUPI()">Verify</button>
                         </div>
                         <div id="verifiedBadge" style="display:none" class="verified-badge">✅ Verified — Fantush Kumar</div>
                     </div>
                     <div class="input-group" style="margin-bottom:8px">
                         <label>Amount (₹) *</label>
-                        <input type="number" name="amount" id="upiAmount" placeholder="Enter amount" min="1" max="100000" required/>
+                        <input class="premium-input" type="number" name="amount" id="upiAmount" placeholder="Enter amount" min="1" max="100000" required/>
                     </div>
                     <div class="quick-amounts">
-                        <button type="button" class="quick-btn" onclick="setAmt(100)">₹100</button>
-                        <button type="button" class="quick-btn" onclick="setAmt(500)">₹500</button>
-                        <button type="button" class="quick-btn" onclick="setAmt(1000)">₹1,000</button>
-                        <button type="button" class="quick-btn" onclick="setAmt(5000)">₹5,000</button>
+                        <button type="button" class="quick-premium-btn" onclick="setAmt(100)">₹100</button>
+                        <button type="button" class="quick-premium-btn" onclick="setAmt(500)">₹500</button>
+                        <button type="button" class="quick-premium-btn" onclick="setAmt(1000)">₹1,000</button>
+                        <button type="button" class="quick-premium-btn" onclick="setAmt(5000)">₹5,000</button>
                     </div>
                     <div class="input-group" style="margin-bottom:14px">
                         <label>Note (Optional)</label>
-                        <input type="text" name="note" placeholder="Add a note e.g. Rent, Food, Fees"/>
+                        <input class="premium-input" type="text" name="note" placeholder="Add a note e.g. Rent, Food, Fees"/>
                     </div>
                     <div class="input-group" style="margin-bottom:14px">
                         <label>Transaction PIN (T-PIN) *</label>
-                        <input type="password" name="tPin" placeholder="4-digit T-PIN" required maxlength="4" style="letter-spacing: 6px; text-align: center; font-size: 18px; font-weight: 700;"/>
+                        <input class="premium-input" type="password" name="tPin" placeholder="4-digit T-PIN" required maxlength="4" style="letter-spacing: 6px; text-align: center; font-size: 18px; font-weight: 700;"/>
                     </div>
-                    <button type="submit" class="btn">📲 Pay Now</button>
+                    <button type="submit" class="premium-btn">📲 Pay Now</button>
                 </form>
             </div>
 
             <!-- Recent -->
-            <div class="card">
+            <div class="premium-card">
                 <h3>🕐 Recent UPI Contacts</h3>
                 <div class="recent-grid">
                     <div class="recent-item" onclick="fillUPI('name@icici')">
@@ -171,29 +163,29 @@
 
         <!-- Request Money -->
         <div id="tab-request" class="tab-panel">
-            <div class="card">
+            <div class="premium-card">
                 <h3>📥 Request Money via UPI</h3>
                 <form method="post" action="/customer/upi-request">
                     <div class="input-group" style="margin-bottom:14px">
                         <label>Request From (UPI ID) *</label>
-                        <input type="text" name="fromUpiId" placeholder="friend@bankname" required/>
+                        <input class="premium-input" type="text" name="fromUpiId" placeholder="friend@bankname" required/>
                     </div>
                     <div class="input-group" style="margin-bottom:14px">
                         <label>Amount (₹) *</label>
-                        <input type="number" name="amount" placeholder="Enter amount" min="1" required/>
+                        <input class="premium-input" type="number" name="amount" placeholder="Enter amount" min="1" required/>
                     </div>
                     <div class="input-group" style="margin-bottom:14px">
                         <label>Reason *</label>
-                        <input type="text" name="reason" placeholder="e.g. Split bill, Fees, Rent" required/>
+                        <input class="premium-input" type="text" name="reason" placeholder="e.g. Split bill, Fees, Rent" required/>
                     </div>
-                    <button type="submit" class="btn" style="background:#2e7d32">📥 Send Request</button>
+                    <button type="submit" class="premium-btn" style="background:#2e7d32">📥 Send Request</button>
                 </form>
             </div>
         </div>
 
         <!-- Scan QR -->
         <div id="tab-scan" class="tab-panel">
-            <div class="card" style="text-align:center;padding:40px">
+            <div class="premium-card" style="text-align:center;padding:40px">
                 <div style="font-size:60px;margin-bottom:16px">📷</div>
                 <h3 style="margin-bottom:8px">Scan QR Code</h3>
                 <p style="color:#888;font-size:13px;margin-bottom:24px">Use your phone's camera to scan any UPI QR code</p>
@@ -202,7 +194,7 @@
             </div>
 
             <!-- Your QR Code -->
-            <div class="card" style="text-align:center">
+            <div class="premium-card" style="text-align:center">
                 <h3 style="margin-bottom:16px">Your UPI QR Code</h3>
                 <div style="width:180px;height:180px;background:linear-gradient(135deg,#4a148c,#7b1fa2);border-radius:12px;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:60px">📲</div>
                 <p style="font-size:13px;color:#666;margin-bottom:4px">Show this to receive payments</p>
@@ -213,7 +205,7 @@
 
         <!-- History -->
         <div id="tab-history" class="tab-panel">
-            <div class="card">
+            <div class="premium-card">
                 <h3>📋 UPI Transaction History</h3>
                 <div style="text-align:center;padding:40px;color:#ccc">
                     <div style="font-size:40px;margin-bottom:10px">📭</div>
@@ -240,5 +232,9 @@
     function fillUPI(id) { document.getElementById('upiInput').value = id; }
     function copyText(text) { navigator.clipboard.writeText(text).then(() => alert('UPI ID copied!')); }
 </script>
+
+        </div>
+    </div>
+</div>
 </body>
 </html>

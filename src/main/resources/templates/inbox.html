@@ -1,90 +1,85 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-    <link rel="stylesheet" th:href="@{/css/global.css}"/>
-    <title>Secure Inbox — SecureBank</title>
     <meta charset="UTF-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f2f8; min-height: 100vh; display: flex; }
-        .sidebar { width: 240px; background: #1a237e; min-height: 100vh; display: flex; flex-direction: column; flex-shrink: 0; position: fixed; top: 0; left: 0; height: 100%; }
-        .sidebar-logo { padding: 24px 20px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid rgba(255,255,255,0.1); }
-        .sidebar-logo-icon { width: 40px; height: 40px; background: rgba(255,255,255,0.15); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; }
-        .sidebar-logo-text { font-size: 17px; font-weight: 700; color: white; }
-        .sidebar-nav { flex: 1; padding: 16px 0; overflow-y: auto; }
-        .nav-section { padding: 8px 20px 4px; font-size: 10px; font-weight: 700; color: rgba(255,255,255,0.4); text-transform: uppercase; letter-spacing: 1px; }
-        .nav-item { display: flex; align-items: center; gap: 12px; padding: 12px 20px; font-size: 14px; color: rgba(255,255,255,0.75); text-decoration: none; transition: all 0.2s; border-left: 3px solid transparent; }
-        .nav-item:hover { background: rgba(255,255,255,0.08); color: white; }
-        .nav-item.active { background: rgba(255,255,255,0.12); color: white; border-left-color: white; font-weight: 600; }
-        .nav-icon { font-size: 18px; width: 22px; text-align: center; }
-        .sidebar-bottom { padding: 16px 20px; border-top: 1px solid rgba(255,255,255,0.1); }
-        .btn-logout { width: 100%; padding: 10px; background: rgba(229,57,53,0.2); color: #ef9a9a; border: 1px solid rgba(229,57,53,0.3); border-radius: 8px; font-size: 13px; font-weight: 600; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 8px; }
-        .main { margin-left: 240px; flex: 1; }
-        .topbar { background: white; padding: 0 30px; height: 64px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #e8e8e8; position: sticky; top: 0; z-index: 50; }
-        .topbar-title { font-size: 18px; font-weight: 700; color: #1a1a2e; }
-        .inbox-layout { display: flex; height: calc(100vh - 64px); }
-        .inbox-sidebar { width: 300px; border-right: 1px solid #e8e8e8; background: white; display: flex; flex-direction: column; flex-shrink: 0; }
-        .inbox-search { padding: 16px; border-bottom: 1px solid #f0f0f0; }
-        .inbox-search input { width: 100%; padding: 10px 14px; border: 1.5px solid #e0e0e0; border-radius: 8px; font-size: 13px; outline: none; }
-        .inbox-filters { display: flex; gap: 4px; padding: 8px 12px; border-bottom: 1px solid #f0f0f0; }
-        .inbox-filter { padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; cursor: pointer; border: none; background: #f5f5f5; color: #666; }
-        .inbox-filter.active { background: #1a237e; color: white; }
-        .msg-list { flex: 1; overflow-y: auto; }
-        .msg-item { padding: 14px 16px; border-bottom: 1px solid #f8f8f8; cursor: pointer; transition: background 0.2s; position: relative; }
-        .msg-item:hover { background: #f5f6ff; }
-        .msg-item.active { background: #eef0ff; }
-        .msg-item.unread { border-left: 3px solid #1a237e; }
-        .msg-from { font-size: 13px; font-weight: 700; color: #1a1a2e; margin-bottom: 3px; }
-        .msg-subject { font-size: 12px; color: #555; margin-bottom: 3px; }
-        .msg-preview { font-size: 11px; color: #aaa; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .msg-time { font-size: 10px; color: #bbb; position: absolute; top: 14px; right: 12px; }
-        .unread-dot { width: 8px; height: 8px; background: #1a237e; border-radius: 50%; position: absolute; right: 12px; bottom: 14px; }
-        .inbox-content { flex: 1; display: flex; flex-direction: column; background: #fafafa; }
-        .msg-header { background: white; padding: 20px 28px; border-bottom: 1px solid #e8e8e8; }
-        .msg-title { font-size: 18px; font-weight: 700; color: #1a1a2e; margin-bottom: 8px; }
-        .msg-meta { display: flex; gap: 16px; font-size: 12px; color: #888; }
-        .msg-body { flex: 1; padding: 28px; overflow-y: auto; }
-        .msg-body p { font-size: 14px; color: #444; line-height: 1.7; margin-bottom: 14px; }
-        .msg-actions { padding: 16px 28px; border-top: 1px solid #e8e8e8; background: white; display: flex; gap: 10px; }
-        .btn-reply { padding: 10px 22px; background: #1a237e; color: white; border: none; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; }
-        .btn-delete { padding: 10px 22px; background: #ffebee; color: #c62828; border: none; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; }
-        .empty-msg { flex: 1; display: flex; align-items: center; justify-content: center; flex-direction: column; color: #ccc; gap: 12px; }
-        .empty-msg div:first-child { font-size: 48px; }
-        @media(max-width:768px) { .sidebar { transform: translateX(-100%); } .main { margin-left: 0; } .inbox-sidebar { width: 100%; } }
-    </style>
+    <title>Inbox — SecureBank</title>
+    <link rel="stylesheet" th:href="@{/css/premium.css}"/>
 </head>
 <body>
 <script th:src="@{/js/global.js}"></script>
-<div class="sidebar">
+
+
+<!-- ══ SIDEBAR ══ -->
+<div class="premium-sidebar" id="sidebar">
     <div class="sidebar-logo">
-        <div class="sidebar-logo-icon">🏦</div>
-        <span class="sidebar-logo-text">SecureBank</span>
+        <div class="logo-icon">🏦</div>
+        <span class="logo-text">SecureBank</span>
     </div>
-    <nav class="sidebar-nav">
-        <div class="nav-section">Main Menu</div>
-        <a href="/customer/dashboard" class="nav-item"><span class="nav-icon">📊</span> Dashboard</a>
-        <a href="/customer/transfer" class="nav-item"><span class="nav-icon">💸</span> Fund Transfer</a>
-        <a href="/customer/transactions" class="nav-item"><span class="nav-icon">📋</span> Transactions</a>
-        <a href="/customer/loans" class="nav-item"><span class="nav-icon">🏠</span> Loans</a>
-        <a href="/customer/bills" class="nav-item"><span class="nav-icon">💡</span> Bills</a>
-        <a href="/customer/fd" class="nav-item"><span class="nav-icon">🏦</span> Fixed Deposit</a>
-        <a href="/customer/rd" class="nav-item"><span class="nav-icon">📅</span> Recurring Deposit</a>
-        <div class="nav-section" style="margin-top:8px">Services</div>
-        <a href="/customer/cheque" class="nav-item"><span class="nav-icon">📝</span> Cheque Book</a>
-        <a href="/customer/complaints" class="nav-item"><span class="nav-icon">📣</span> Complaints</a>
-        <a href="/customer/inbox" class="nav-item active"><span class="nav-icon">📬</span> Secure Inbox</a>
-        <div class="nav-section" style="margin-top:8px">Account</div>
-        <a href="/customer/card" class="nav-item"><span class="nav-icon">💳</span> Debit Card</a>
-        <a href="/customer/kyc" class="nav-item"><span class="nav-icon">🪪</span> KYC Update</a>
-        <a href="/customer/profile" class="nav-item"><span class="nav-icon">👤</span> Profile</a>
-        <a href="/customer/help" class="nav-item"><span class="nav-icon">❓</span> Help</a>
+    <div class="sidebar-user-card">
+        <div class="user-avatar" th:text="${session.user.name != null ? session.user.name.substring(0,1) : 'U'}">U</div>
+        <div class="user-name" th:text="${session.user.name}">User</div>
+        <div class="user-email" th:text="${session.user.email}">user@email.com</div>
+        <span class="user-badge">● ACTIVE</span>
+    </div>
+    <nav>
+        <div class="nav-section-label">Main Menu</div>
+        <a href="/customer/dashboard" class="premium-nav-item"><span class="nav-icon">📊</span> Dashboard</a>
+        <a href="/customer/transfer" class="premium-nav-item"><span class="nav-icon">💸</span> Fund Transfer</a>
+        <a href="/customer/transactions" class="premium-nav-item"><span class="nav-icon">📋</span> Transactions</a>
+        <a href="/customer/upi" class="premium-nav-item"><span class="nav-icon">📲</span> UPI Payments</a>
+        <a href="/customer/loans" class="premium-nav-item"><span class="nav-icon">🏠</span> Loans</a>
+        <a href="/customer/bills" class="premium-nav-item"><span class="nav-icon">🧾</span> Pay Bills</a>
+
+        <div class="nav-section-label">Account</div>
+        <a href="/customer/beneficiaries" class="premium-nav-item"><span class="nav-icon">👥</span> Beneficiaries</a>
+        <a href="/customer/card" class="premium-nav-item"><span class="nav-icon">💳</span> Cards</a>
+        <a href="/customer/statement" class="premium-nav-item"><span class="nav-icon">📄</span> Statement</a>
+        <a href="/customer/fd" class="premium-nav-item"><span class="nav-icon">🏦</span> Fixed Deposits</a>
+        <a href="/customer/rd" class="premium-nav-item"><span class="nav-icon">💰</span> Recurring Deposits</a>
+        <a href="/customer/cheque" class="premium-nav-item"><span class="nav-icon">📝</span> Cheque Book</a>
+        <a href="/customer/standing-instructions" class="premium-nav-item"><span class="nav-icon">🔄</span> Standing Orders</a>
+
+        <div class="nav-section-label">Services</div>
+        <a href="/customer/currency" class="premium-nav-item"><span class="nav-icon">💱</span> Currency</a>
+        <a href="/customer/nominee" class="premium-nav-item"><span class="nav-icon">👤</span> Nominee</a>
+        <a href="/customer/kyc" class="premium-nav-item"><span class="nav-icon">🪪</span> KYC</a>
+        <a href="/customer/insights" class="premium-nav-item"><span class="nav-icon">🧠</span> Insights</a>
+        <a href="/customer/notifications" class="premium-nav-item"><span class="nav-icon">🔔</span> Notifications</a>
+
+        <div class="nav-section-label">Support</div>
+        <a href="/customer/complaints" class="premium-nav-item"><span class="nav-icon">📩</span> Complaints</a>
+        <a href="/customer/service-request" class="premium-nav-item"><span class="nav-icon">🛎️</span> Service Request</a>
+        <a href="/customer/help" class="premium-nav-item"><span class="nav-icon">❓</span> Help</a>
+        <a href="/customer/profile" class="premium-nav-item"><span class="nav-icon">⚙️</span> Profile</a>
     </nav>
     <div class="sidebar-bottom">
         <a href="/logout" class="btn-logout">🚪 Sign Out</a>
     </div>
 </div>
-<div class="main">
+
+
+
+<!-- ══ MAIN CONTENT ══ -->
+<div class="premium-main">
+    <div class="premium-topbar">
+        <div class="topbar-greeting">
+            Control Panel
+        </div>
+        <div class="topbar-actions">
+            <button class="topbar-btn" onclick="document.body.dataset.theme = document.body.dataset.theme === 'light' ? 'dark' : 'light'" title="Toggle Theme">🌙</button>
+            <button class="topbar-btn notification-btn" title="Notifications">
+                🔔<span class="notification-badge"></span>
+            </button>
+            <div class="topbar-clock" id="liveClock">00:00:00</div>
+            <button class="mobile-menu-btn" onclick="document.getElementById('sidebar').classList.toggle('open')">☰</button>
+        </div>
+    </div>
+    
+    <div class="premium-content">
+        <div class="premium-card" style="padding: 24px;">
+
+            
     <div class="topbar">
         <span class="topbar-title">📬 Secure Inbox</span>
     </div>
@@ -92,7 +87,7 @@
         <!-- Message List -->
         <div class="inbox-sidebar">
             <div class="inbox-search">
-                <input type="text" placeholder="🔍 Search messages..."/>
+                <input class="premium-input" type="text" placeholder="🔍 Search messages..."/>
             </div>
             <div class="inbox-filters">
                 <button class="inbox-filter active">All</button>
@@ -152,8 +147,8 @@
                     <p>Best regards,<br/><strong>SecureBank Team</strong></p>
                 </div>
                 <div class="msg-actions">
-                    <button class="btn-reply">↩️ Reply</button>
-                    <button class="btn-delete">🗑️ Delete</button>
+                    <button class="premium-btn-reply">↩️ Reply</button>
+                    <button class="premium-btn-delete">🗑️ Delete</button>
                 </div>
             </div>
             <div id="msg-security" class="msg-display" style="display:none;flex-direction:column;flex:1">
@@ -164,17 +159,17 @@
                 <div class="msg-body">
                     <p>A new login was detected on your account from <strong>Windows PC</strong>. If this was you, no action is needed. If not, change your password immediately.</p>
                 </div>
-                <div class="msg-actions"><button class="btn-reply">↩️ Reply</button><button class="btn-delete">🗑️ Delete</button></div>
+                <div class="msg-actions"><button class="premium-btn-reply">↩️ Reply</button><button class="premium-btn-delete">🗑️ Delete</button></div>
             </div>
             <div id="msg-kyc" class="msg-display" style="display:none;flex-direction:column;flex:1">
                 <div class="msg-header"><div class="msg-title">KYC Verification Complete ✅</div><div class="msg-meta"><span>From: KYC Team</span><span>Yesterday</span></div></div>
                 <div class="msg-body"><p>Your KYC documents have been verified successfully. Your account is now fully activated with all features enabled.</p></div>
-                <div class="msg-actions"><button class="btn-reply">↩️ Reply</button><button class="btn-delete">🗑️ Delete</button></div>
+                <div class="msg-actions"><button class="premium-btn-reply">↩️ Reply</button><button class="premium-btn-delete">🗑️ Delete</button></div>
             </div>
             <div id="msg-offer" class="msg-display" style="display:none;flex-direction:column;flex:1">
                 <div class="msg-header"><div class="msg-title">Special FD Rate — 7.5% p.a. 🎁</div><div class="msg-meta"><span>From: Offers Team</span><span>2 days ago</span></div></div>
                 <div class="msg-body"><p>Limited time offer! Open a Fixed Deposit of ₹1 lakh or more and earn <strong>7.5% per annum</strong>. Offer valid till 30th June 2026.</p><p><a href="/customer/fd" style="color:#1a237e;font-weight:600">Open FD Now →</a></p></div>
-                <div class="msg-actions"><button class="btn-reply">↩️ Reply</button><button class="btn-delete">🗑️ Delete</button></div>
+                <div class="msg-actions"><button class="premium-btn-reply">↩️ Reply</button><button class="premium-btn-delete">🗑️ Delete</button></div>
             </div>
         </div>
     </div>
@@ -191,5 +186,9 @@
         if (msg) msg.style.display = 'flex';
     }
 </script>
+
+        </div>
+    </div>
+</div>
 </body>
 </html>

@@ -1,210 +1,252 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-    <link rel="stylesheet" th:href="@{/css/global.css}"/>
-    <title>My Profile</title>
     <meta charset="UTF-8"/>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f2f8; min-height: 100vh; }
-        .navbar { background: #1a237e; color: white; padding: 0 30px; height: 64px; display: flex; align-items: center; justify-content: space-between; }
-        .nav-left { display: flex; align-items: center; gap: 12px; }
-        .nav-logo { width: 38px; height: 38px; background: rgba(255,255,255,0.15); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; }
-        .nav-title { font-size: 18px; font-weight: 700; }
-        .btn-logout { padding: 8px 18px; background: #e53935; color: white; border: none; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; text-decoration: none; }
-        .tabs { background: white; border-bottom: 1px solid #e0e0e0; padding: 0 30px; display: flex; gap: 4px; }
-        .tab { padding: 16px 20px; font-size: 14px; font-weight: 500; color: #777; text-decoration: none; border-bottom: 2px solid transparent; }
-        .tab:hover { color: #1a237e; }
-        .tab.active { color: #1a237e; border-bottom-color: #1a237e; }
-        .main { padding: 30px; max-width: 900px; margin: 0 auto; }
-        .profile-header { background: linear-gradient(135deg, #1a237e, #283593); color: white; border-radius: 14px; padding: 30px; display: flex; align-items: center; gap: 24px; margin-bottom: 24px; }
-        .avatar { width: 80px; height: 80px; background: rgba(255,255,255,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 36px; font-weight: 700; flex-shrink: 0; }
-        .profile-info h2 { font-size: 22px; font-weight: 700; margin-bottom: 4px; }
-        .profile-info p { font-size: 13px; opacity: 0.8; }
-        .badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; margin-top: 8px; }
-        .badge-green { background: rgba(255,255,255,0.2); color: white; }
-        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-        .card { background: white; border-radius: 12px; border: 0.5px solid #e8e8e8; padding: 24px; }
-        .card h3 { font-size: 15px; font-weight: 600; color: #1a1a2e; margin-bottom: 18px; padding-bottom: 12px; border-bottom: 1px solid #f0f0f0; }
-        .info-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #f8f8f8; }
-        .info-row:last-child { border-bottom: none; }
-        .info-label { font-size: 12px; color: #999; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px; }
-        .info-value { font-size: 13px; color: #333; font-weight: 500; }
-        .full-card { background: white; border-radius: 12px; border: 0.5px solid #e8e8e8; padding: 24px; margin-top: 20px; }
-        .full-card h3 { font-size: 15px; font-weight: 600; color: #1a1a2e; margin-bottom: 18px; }
-        label { font-size: 12px; font-weight: 600; color: #444; display: block; margin-bottom: 6px; }
-        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-        input { width: 100%; padding: 11px 14px; border: 1.5px solid #e0e0e0; border-radius: 8px; font-size: 14px; color: #333; outline: none; background: #fafafa; }
-        input:focus { border-color: #1a237e; background: #fff; }
-        .input-group { margin-bottom: 4px; }
-        .btn { padding: 11px 24px; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; }
-        .btn-primary { background: #1a237e; color: white; }
-        .btn-primary:hover { background: #283593; }
-        .btn-danger { background: #ffebee; color: #c62828; }
-        .actions { display: flex; gap: 12px; margin-top: 20px; }
-        .alert { padding: 10px 14px; border-radius: 8px; font-size: 13px; margin-bottom: 16px; }
-        .alert-success { background: #f1f8e9; border: 1px solid #c5e1a5; color: #2e7d32; }
-        .alert-error { background: #fff3f3; border: 1px solid #ffcdd2; color: #c62828; }
-    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>My Profile — SecureBank</title>
+    <meta name="description" content="View and edit your profile."/>
+    <link rel="stylesheet" th:href="@{/css/premium.css}"/>
 </head>
 <body>
 <script th:src="@{/js/global.js}"></script>
-<div class="navbar">
-    <div class="nav-left">
-        <div class="nav-logo">🏦</div>
-        <span class="nav-title">SecureBank</span>
+
+<!-- ══ SIDEBAR ══ -->
+<div class="premium-sidebar" id="sidebar">
+    <div class="sidebar-logo">
+        <div class="logo-icon">🏦</div>
+        <span class="logo-text">SecureBank</span>
     </div>
-    <div style="display:flex;align-items:center;gap:14px">
-        <span style="font-size:14px" th:text="${session.user.name}">User</span>
-        <a href="/logout" class="btn-logout">Logout</a>
+    <div class="sidebar-user-card">
+        <div class="user-avatar" th:text="${session.user.name != null ? session.user.name.substring(0,1) : 'U'}">U</div>
+        <div class="user-name" th:text="${session.user.name}">User</div>
+        <div class="user-email" th:text="${session.user.email}">user@email.com</div>
+        <span class="user-badge">● ACTIVE</span>
+    </div>
+    <nav>
+        <div class="nav-section-label">Main Menu</div>
+        <a href="/customer/dashboard" class="premium-nav-item"><span class="nav-icon">📊</span> Dashboard</a>
+        <a href="/customer/transfer" class="premium-nav-item"><span class="nav-icon">💸</span> Fund Transfer</a>
+        <a href="/customer/transactions" class="premium-nav-item"><span class="nav-icon">📋</span> Transactions</a>
+        <a href="/customer/upi" class="premium-nav-item"><span class="nav-icon">📲</span> UPI Payments</a>
+        <a href="/customer/loans" class="premium-nav-item"><span class="nav-icon">🏠</span> Loans</a>
+        <a href="/customer/bills" class="premium-nav-item"><span class="nav-icon">🧾</span> Pay Bills</a>
+
+        <div class="nav-section-label">Account</div>
+        <a href="/customer/beneficiaries" class="premium-nav-item"><span class="nav-icon">👥</span> Beneficiaries</a>
+        <a href="/customer/card" class="premium-nav-item"><span class="nav-icon">💳</span> Cards</a>
+        <a href="/customer/statement" class="premium-nav-item"><span class="nav-icon">📄</span> Statement</a>
+        <a href="/customer/fd" class="premium-nav-item"><span class="nav-icon">🏦</span> Fixed Deposits</a>
+        <a href="/customer/rd" class="premium-nav-item"><span class="nav-icon">💰</span> Recurring Deposits</a>
+        <a href="/customer/cheque" class="premium-nav-item"><span class="nav-icon">📝</span> Cheque Book</a>
+        <a href="/customer/standing-instructions" class="premium-nav-item"><span class="nav-icon">🔄</span> Standing Orders</a>
+
+        <div class="nav-section-label">Services</div>
+        <a href="/customer/currency" class="premium-nav-item"><span class="nav-icon">💱</span> Currency</a>
+        <a href="/customer/nominee" class="premium-nav-item"><span class="nav-icon">👤</span> Nominee</a>
+        <a href="/customer/kyc" class="premium-nav-item"><span class="nav-icon">🪪</span> KYC</a>
+        <a href="/customer/insights" class="premium-nav-item"><span class="nav-icon">🧠</span> Insights</a>
+        <a href="/customer/notifications" class="premium-nav-item"><span class="nav-icon">🔔</span> Notifications</a>
+
+        <div class="nav-section-label">Support</div>
+        <a href="/customer/complaints" class="premium-nav-item"><span class="nav-icon">📩</span> Complaints</a>
+        <a href="/customer/service-request" class="premium-nav-item"><span class="nav-icon">🛎️</span> Service Request</a>
+        <a href="/customer/help" class="premium-nav-item"><span class="nav-icon">❓</span> Help</a>
+        <a href="/customer/profile" class="premium-nav-item active"><span class="nav-icon">⚙️</span> Profile</a>
+    </nav>
+    <div class="sidebar-bottom">
+        <a href="/logout" class="btn-logout">🚪 Sign Out</a>
     </div>
 </div>
 
-<div class="tabs">
-    <a href="/customer/dashboard" class="tab">📊 Overview</a>
-    <a href="/customer/transfer" class="tab">💸 Fund Transfer</a>
-    <a href="/customer/transactions" class="tab">📋 Transactions</a>
-    <a href="/customer/loans" class="tab">🏠 Loans</a>
-    <a href="/customer/profile" class="tab active">👤 Profile</a>
+<!-- ══ MAIN CONTENT ══ -->
+<div class="premium-main">
+    <div class="premium-topbar">
+        <button class="mobile-menu-btn" onclick="toggleSidebar()">☰</button>
+        <span class="topbar-greeting">👤 My Profile</span>
+        <div class="topbar-actions">
+            <button class="topbar-btn" onclick="toggleDarkMode()" title="Toggle Theme">🌙</button>
+            <span class="topbar-clock" id="clock"></span>
+            <a href="/customer/notifications" class="topbar-btn" title="Notifications">
+                🔔<div class="notification-badge"></div>
+            </a>
+        </div>
+    </div>
+
+    <div class="premium-content">
+        <div th:if="${success}" class="premium-alert premium-alert-success" th:text="${success}"></div>
+        <div th:if="${error}" class="premium-alert premium-alert-error" th:text="${error}"></div>
+
+        <!-- Profile Header -->
+        <div class="glass-card premium-card" style="margin-bottom: 24px;">
+            <div style="display: flex; align-items: center; gap: 24px;">
+                <div style="width: 80px; height: 80px; background: var(--accent-gradient); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 36px; font-weight: 700; color: white; flex-shrink: 0;" th:text="${session.user.name != null ? session.user.name.substring(0,1) : 'U'}">R</div>
+                <div>
+                    <h2 style="font-size: 22px; font-weight: 700; margin-bottom: 4px; color: var(--text-white);" th:text="${session.user.name}">Rahul Sharma</h2>
+                    <p style="font-size: 13px; color: var(--text-muted);" th:text="${session.user.email}">rahul@example.com</p>
+                    <span class="premium-badge badge-success" style="margin-top: 8px;" th:text="${session.user.status}">ACTIVE</span>
+                </div>
+            </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px;">
+            <!-- Account Info -->
+            <div class="glass-card premium-card">
+                <div class="premium-card-header">
+                    <h3 class="premium-card-title">📋 Account Information</h3>
+                </div>
+                <div class="premium-info-list">
+                    <div class="premium-info-row">
+                        <span class="premium-info-key">Full Name</span>
+                        <span class="premium-info-val" th:text="${session.user.name}">—</span>
+                    </div>
+                    <div class="premium-info-row">
+                        <span class="premium-info-key">Email</span>
+                        <span class="premium-info-val" th:text="${session.user.email}">—</span>
+                    </div>
+                    <div class="premium-info-row">
+                        <span class="premium-info-key">Phone</span>
+                        <span class="premium-info-val" th:text="${session.user.phone ?: 'Not set'}">—</span>
+                    </div>
+                    <div class="premium-info-row">
+                        <span class="premium-info-key">Role</span>
+                        <span class="premium-info-val" th:text="${session.user.role}">—</span>
+                    </div>
+                    <div class="premium-info-row">
+                        <span class="premium-info-key">Status</span>
+                        <span class="premium-info-val" th:text="${session.user.status}">—</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Security Info -->
+            <div class="glass-card premium-card">
+                <div class="premium-card-header">
+                    <h3 class="premium-card-title">🔒 Security Information</h3>
+                </div>
+                <div class="premium-info-list">
+                    <div class="premium-info-row">
+                        <span class="premium-info-key">2FA Status</span>
+                        <span class="premium-info-val" style="color:var(--success);font-weight:600">✅ Enabled</span>
+                    </div>
+                    <div class="premium-info-row">
+                        <span class="premium-info-key">Failed Logins</span>
+                        <span class="premium-info-val" th:text="${session.user.failedLogins}">0</span>
+                    </div>
+                    <div class="premium-info-row">
+                        <span class="premium-info-key">Password</span>
+                        <span class="premium-info-val">••••••••</span>
+                    </div>
+                    <div class="premium-info-row">
+                        <span class="premium-info-key">Last Login</span>
+                        <span class="premium-info-val">Just now</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px;">
+            <!-- Change Password -->
+            <div class="glass-card premium-card">
+                <div class="premium-card-header">
+                    <h3 class="premium-card-title">🔑 Change Password</h3>
+                </div>
+                <form method="post" action="/customer/change-password">
+                    <div style="margin-bottom: 16px;">
+                        <label class="premium-label">Current Password</label>
+                        <input type="password" name="currentPassword" class="premium-input" placeholder="••••••••" required/>
+                    </div>
+                    <div style="margin-bottom: 16px;">
+                        <label class="premium-label">New Password</label>
+                        <input type="password" name="newPassword" class="premium-input" placeholder="Min 8 characters" required/>
+                    </div>
+                    <div style="margin-bottom: 16px;">
+                        <label class="premium-label">Confirm New Password</label>
+                        <input type="password" name="confirmPassword" class="premium-input" placeholder="Repeat new password" required/>
+                    </div>
+                    <div style="display: flex; gap: 12px; margin-top: 24px;">
+                        <button type="submit" class="premium-btn">Update Password</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Change T-PIN -->
+            <div class="glass-card premium-card">
+                <div class="premium-card-header">
+                    <h3 class="premium-card-title">🔢 Change T-PIN</h3>
+                </div>
+                <form method="post" action="/customer/update-tpin">
+                    <div style="margin-bottom: 16px;">
+                        <label class="premium-label">Current T-PIN (Default: 1234)</label>
+                        <input type="password" name="currentPin" class="premium-input" placeholder="••••" maxlength="4" required/>
+                    </div>
+                    <div style="margin-bottom: 16px;">
+                        <label class="premium-label">New T-PIN (4 digits)</label>
+                        <input type="password" name="newPin" class="premium-input" placeholder="••••" maxlength="4" required/>
+                    </div>
+                    <div style="margin-bottom: 16px;">
+                        <label class="premium-label">Confirm New T-PIN</label>
+                        <input type="password" name="confirmPin" class="premium-input" placeholder="••••" maxlength="4" required/>
+                    </div>
+                    <div style="display: flex; gap: 12px; margin-top: 24px;">
+                        <button type="submit" class="premium-btn">Update T-PIN</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Security Activity Logs -->
+        <div class="glass-card premium-card">
+            <div class="premium-card-header">
+                <h3 class="premium-card-title">🛡️ Recent Security Activity</h3>
+            </div>
+            <div th:if="${securityLogs == null or securityLogs.isEmpty()}" style="text-align:center; padding: 20px; color: var(--text-muted);">
+                No recent activity logged.
+            </div>
+            <div style="overflow-x: auto;">
+                <table th:if="${securityLogs != null and !securityLogs.isEmpty()}" class="premium-table">
+                    <thead>
+                        <tr>
+                            <th>Date & Time</th>
+                            <th>Action / Event</th>
+                            <th>IP Address</th>
+                            <th>Device / Browser</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="log : ${securityLogs}">
+                            <td th:text="${#temporals.format(log.createdAt, 'dd-MM-yyyy HH:mm')}">Just now</td>
+                            <td th:text="${log.action}" style="font-weight: 600; color: var(--accent-primary);">LOGIN_SUCCESS</td>
+                            <td th:text="${log.ipAddress}">127.0.0.1</td>
+                            <td th:text="${log.userAgent}" th:title="${log.userAgent}" style="max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">Chrome / Windows</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
 </div>
 
-<div class="main">
+<script>
+    function updateClock() {
+        const el = document.getElementById('clock');
+        if (el) el.textContent = new Date().toLocaleTimeString('en-IN', {hour:'2-digit', minute:'2-digit'});
+    }
+    updateClock(); setInterval(updateClock, 1000);
 
-    <!-- Profile Header -->
-    <div class="profile-header">
-        <div class="avatar" th:text="${session.user.name != null ? session.user.name.substring(0,1) : 'U'}">R</div>
-        <div class="profile-info">
-            <h2 th:text="${session.user.name}">Rahul Sharma</h2>
-            <p th:text="${session.user.email}">rahul@example.com</p>
-            <span class="badge badge-green" th:text="${session.user.status}">ACTIVE</span>
-        </div>
-    </div>
-
-    <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
-    <div th:if="${error}" class="alert alert-error" th:text="${error}"></div>
-
-    <!-- Info Cards -->
-    <div class="grid">
-        <div class="card">
-            <h3>📋 Account Information</h3>
-            <div class="info-row">
-                <span class="info-label">Full Name</span>
-                <span class="info-value" th:text="${session.user.name}">—</span>
-            </div>
-            <div class="info-row">
-                <span class="info-label">Email</span>
-                <span class="info-value" th:text="${session.user.email}">—</span>
-            </div>
-            <div class="info-row">
-                <span class="info-label">Phone</span>
-                <span class="info-value" th:text="${session.user.phone ?: 'Not set'}">—</span>
-            </div>
-            <div class="info-row">
-                <span class="info-label">Role</span>
-                <span class="info-value" th:text="${session.user.role}">—</span>
-            </div>
-            <div class="info-row">
-                <span class="info-label">Status</span>
-                <span class="info-value" th:text="${session.user.status}">—</span>
-            </div>
-        </div>
-        <div class="card">
-            <h3>🔒 Security Information</h3>
-            <div class="info-row">
-                <span class="info-label">2FA Status</span>
-                <span class="info-value" style="color:#2e7d32;font-weight:600">✅ Enabled</span>
-            </div>
-            <div class="info-row">
-                <span class="info-label">Failed Logins</span>
-                <span class="info-value" th:text="${session.user.failedLogins}">0</span>
-            </div>
-            <div class="info-row">
-                <span class="info-label">Password</span>
-                <span class="info-value">••••••••</span>
-            </div>
-            <div class="info-row">
-                <span class="info-label">Last Login</span>
-                <span class="info-value">Just now</span>
-            </div>
-        </div>
-    </div>
-
-    <!-- Change Password -->
-    <div class="full-card">
-        <h3>🔑 Change Password</h3>
-        <form method="post" action="/customer/change-password">
-            <div class="form-grid">
-                <div class="input-group">
-                    <label>Current Password</label>
-                    <input type="password" name="currentPassword" placeholder="••••••••" required/>
-                </div>
-                <div class="input-group">
-                    <label>New Password</label>
-                    <input type="password" name="newPassword" placeholder="Min 8 characters" required/>
-                </div>
-                <div class="input-group">
-                    <label>Confirm New Password</label>
-                    <input type="password" name="confirmPassword" placeholder="Repeat new password" required/>
-                </div>
-            </div>
-            <div class="actions">
-                <button type="submit" class="btn btn-primary">Update Password</button>
-                <a href="/customer/dashboard" class="btn btn-danger">Cancel</a>
-            </div>
-        </form>
-    </div>
-
-    <!-- Change T-PIN -->
-    <div class="full-card">
-        <h3>🔢 Change Transaction PIN (T-PIN)</h3>
-        <form method="post" action="/customer/update-tpin">
-            <div class="form-grid">
-                <div class="input-group">
-                    <label>Current T-PIN (Default: 1234)</label>
-                    <input type="password" name="currentPin" placeholder="••••" maxlength="4" required/>
-                </div>
-                <div class="input-group">
-                    <label>New T-PIN (4 digits)</label>
-                    <input type="password" name="newPin" placeholder="••••" maxlength="4" required/>
-                </div>
-                <div class="input-group">
-                    <label>Confirm New T-PIN</label>
-                    <input type="password" name="confirmPin" placeholder="••••" maxlength="4" required/>
-                </div>
-            </div>
-            <div class="actions">
-                <button type="submit" class="btn btn-primary">Update T-PIN</button>
-            </div>
-        </form>
-    </div>
-
-    <!-- Security Activity Logs -->
-    <div class="full-card">
-        <h3>🛡️ Recent Security Activity (Last 10 Logs)</h3>
-        <div th:if="${securityLogs == null or securityLogs.isEmpty()}" style="text-align:center; padding: 20px; color: #999;">
-            No recent activity logged.
-        </div>
-        <table th:if="${securityLogs != null and !securityLogs.isEmpty()}" style="width: 100%; border-collapse: collapse; margin-top: 10px;">
-            <thead>
-                <tr style="background: #fafafa; border-bottom: 1px solid #f0f0f0;">
-                    <th style="padding: 12px; text-align: left; font-size: 11px; color: #999; font-weight: 700; text-transform: uppercase;">Date & Time</th>
-                    <th style="padding: 12px; text-align: left; font-size: 11px; color: #999; font-weight: 700; text-transform: uppercase;">Action / Event</th>
-                    <th style="padding: 12px; text-align: left; font-size: 11px; color: #999; font-weight: 700; text-transform: uppercase;">IP Address</th>
-                    <th style="padding: 12px; text-align: left; font-size: 11px; color: #999; font-weight: 700; text-transform: uppercase;">Device / Browser</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr th:each="log : ${securityLogs}" style="border-bottom: 1px solid #f8f8f8;">
-                    <td style="padding: 12px; font-size: 13px; color: #555;" th:text="${#temporals.format(log.createdAt, 'dd-MM-yyyy HH:mm')}">Just now</td>
-                    <td style="padding: 12px; font-size: 13px; font-weight: 600; color: #1a237e;" th:text="${log.action}">LOGIN_SUCCESS</td>
-                    <td style="padding: 12px; font-size: 13px; color: #555;" th:text="${log.ipAddress}">127.0.0.1</td>
-                    <td style="padding: 12px; font-size: 12px; color: #888; max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" 
-                        th:text="${log.userAgent}" th:title="${log.userAgent}">Chrome / Windows</td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
-
-</div>
+    function toggleSidebar() {
+        document.getElementById('sidebar').classList.toggle('open');
+        let overlay = document.querySelector('.sidebar-overlay');
+        if (!overlay) {
+            overlay = document.createElement('div');
+            overlay.className = 'sidebar-overlay';
+            overlay.onclick = function() {
+                document.getElementById('sidebar').classList.remove('open');
+                overlay.classList.remove('show');
+            };
+            document.body.appendChild(overlay);
+        }
+        overlay.classList.toggle('show');
+    }
+</script>
 </body>
 </html>

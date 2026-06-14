@@ -1,138 +1,184 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-    <link rel="stylesheet" th:href="@{/css/global.css}"/>
-    <title>Transactions</title>
     <meta charset="UTF-8"/>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f2f8; min-height: 100vh; }
-        .navbar { background: #1a237e; color: white; padding: 0 30px; height: 64px; display: flex; align-items: center; justify-content: space-between; }
-        .nav-left { display: flex; align-items: center; gap: 12px; }
-        .nav-logo { width: 38px; height: 38px; background: rgba(255,255,255,0.15); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; }
-        .nav-title { font-size: 18px; font-weight: 700; }
-        .btn-logout { padding: 8px 18px; background: #e53935; color: white; border: none; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; text-decoration: none; }
-        .tabs { background: white; border-bottom: 1px solid #e0e0e0; padding: 0 30px; display: flex; gap: 4px; }
-        .tab { padding: 16px 20px; font-size: 14px; font-weight: 500; color: #777; text-decoration: none; border-bottom: 2px solid transparent; }
-        .tab:hover { color: #1a237e; }
-        .tab.active { color: #1a237e; border-bottom-color: #1a237e; }
-        .main { padding: 30px; max-width: 1100px; margin: 0 auto; }
-        .page-title { font-size: 22px; font-weight: 700; color: #1a1a2e; margin-bottom: 6px; }
-        .page-sub { font-size: 13px; color: #888; margin-bottom: 24px; }
-        .stat-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 24px; }
-        .stat-card { background: white; border-radius: 12px; padding: 18px 22px; border: 0.5px solid #e8e8e8; }
-        .stat-label { font-size: 12px; color: #999; font-weight: 600; text-transform: uppercase; margin-bottom: 8px; }
-        .stat-value { font-size: 22px; font-weight: 700; color: #1a1a2e; }
-        .filter-bar { background: white; border-radius: 12px; padding: 16px 20px; display: flex; gap: 12px; align-items: center; margin-bottom: 20px; border: 0.5px solid #e8e8e8; flex-wrap: wrap; }
-        .filter-bar input, .filter-bar select { padding: 9px 14px; border: 1.5px solid #e0e0e0; border-radius: 8px; font-size: 13px; outline: none; background: #fafafa; }
-        .filter-bar input:focus, .filter-bar select:focus { border-color: #1a237e; }
-        .btn-filter { padding: 9px 20px; background: #1a237e; color: white; border: none; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; }
-        .card { background: white; border-radius: 12px; border: 0.5px solid #e8e8e8; overflow: hidden; }
-        .card-header { padding: 18px 24px; border-bottom: 1px solid #f0f0f0; display: flex; justify-content: space-between; align-items: center; }
-        .card-header h3 { font-size: 16px; font-weight: 600; color: #1a1a2e; }
-        table { width: 100%; border-collapse: collapse; }
-        th { font-size: 11px; font-weight: 700; color: #999; text-transform: uppercase; letter-spacing: 0.5px; padding: 12px 20px; text-align: left; background: #fafafa; border-bottom: 1px solid #f0f0f0; }
-        td { padding: 14px 20px; font-size: 13px; color: #444; border-bottom: 1px solid #f8f8f8; vertical-align: middle; }
-        tr:last-child td { border-bottom: none; }
-        .badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; }
-        .badge-green { background: #e8f5e9; color: #2e7d32; }
-        .badge-red { background: #ffebee; color: #c62828; }
-        .badge-blue { background: #e3f2fd; color: #1565c0; }
-        .amount-credit { color: #2e7d32; font-weight: 700; }
-        .amount-debit { color: #c62828; font-weight: 700; }
-        .empty-state { text-align: center; padding: 50px; color: #bbb; }
-        .empty-state div:first-child { font-size: 40px; margin-bottom: 12px; }
-    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Transactions — SecureBank</title>
+    <link rel="stylesheet" th:href="@{/css/premium.css}"/>
 </head>
 <body>
 <script th:src="@{/js/global.js}"></script>
-<div class="navbar">
-    <div class="nav-left">
-        <div class="nav-logo">🏦</div>
-        <span class="nav-title">SecureBank</span>
+
+<!-- ══ SIDEBAR ══ -->
+<div class="premium-sidebar" id="sidebar">
+    <div class="sidebar-logo">
+        <div class="logo-icon">🏦</div>
+        <span class="logo-text">SecureBank</span>
     </div>
-    <div style="display:flex;align-items:center;gap:14px">
-        <span style="font-size:14px" th:text="${session.user.name}">User</span>
-        <a href="/logout" class="btn-logout">Logout</a>
+    <div class="sidebar-user-card">
+        <div class="user-avatar" th:text="${session.user.name != null ? session.user.name.substring(0,1) : 'U'}">U</div>
+        <div class="user-name" th:text="${session.user.name}">User</div>
+        <div class="user-email" th:text="${session.user.email}">user@email.com</div>
+        <span class="user-badge">● ACTIVE</span>
+    </div>
+    <nav>
+        <div class="nav-section-label">Main Menu</div>
+        <a href="/customer/dashboard" class="premium-nav-item"><span class="nav-icon">📊</span> Dashboard</a>
+        <a href="/customer/transfer" class="premium-nav-item"><span class="nav-icon">💸</span> Fund Transfer</a>
+        <a href="/customer/transactions" class="premium-nav-item active"><span class="nav-icon">📋</span> Transactions</a>
+        <a href="/customer/upi" class="premium-nav-item"><span class="nav-icon">📲</span> UPI Payments</a>
+        <a href="/customer/loans" class="premium-nav-item"><span class="nav-icon">🏠</span> Loans</a>
+        <a href="/customer/bills" class="premium-nav-item"><span class="nav-icon">🧾</span> Pay Bills</a>
+
+        <div class="nav-section-label">Account</div>
+        <a href="/customer/beneficiaries" class="premium-nav-item"><span class="nav-icon">👥</span> Beneficiaries</a>
+        <a href="/customer/card" class="premium-nav-item"><span class="nav-icon">💳</span> Cards</a>
+        <a href="/customer/statement" class="premium-nav-item"><span class="nav-icon">📄</span> Statement</a>
+        <a href="/customer/fd" class="premium-nav-item"><span class="nav-icon">🏦</span> Fixed Deposits</a>
+        <a href="/customer/rd" class="premium-nav-item"><span class="nav-icon">💰</span> Recurring Deposits</a>
+        <a href="/customer/cheque" class="premium-nav-item"><span class="nav-icon">📝</span> Cheque Book</a>
+        <a href="/customer/standing-instructions" class="premium-nav-item"><span class="nav-icon">🔄</span> Standing Orders</a>
+
+        <div class="nav-section-label">Services</div>
+        <a href="/customer/currency" class="premium-nav-item"><span class="nav-icon">💱</span> Currency</a>
+        <a href="/customer/nominee" class="premium-nav-item"><span class="nav-icon">👤</span> Nominee</a>
+        <a href="/customer/kyc" class="premium-nav-item"><span class="nav-icon">🪪</span> KYC</a>
+        <a href="/customer/insights" class="premium-nav-item"><span class="nav-icon">🧠</span> Insights</a>
+        <a href="/customer/notifications" class="premium-nav-item"><span class="nav-icon">🔔</span> Notifications</a>
+
+        <div class="nav-section-label">Support</div>
+        <a href="/customer/complaints" class="premium-nav-item"><span class="nav-icon">📩</span> Complaints</a>
+        <a href="/customer/service-request" class="premium-nav-item"><span class="nav-icon">🛎️</span> Service Request</a>
+        <a href="/customer/help" class="premium-nav-item"><span class="nav-icon">❓</span> Help</a>
+        <a href="/customer/profile" class="premium-nav-item"><span class="nav-icon">⚙️</span> Profile</a>
+    </nav>
+    <div class="sidebar-bottom">
+        <a href="/logout" class="btn-logout">🚪 Sign Out</a>
     </div>
 </div>
 
-<div class="tabs">
-    <a href="/customer/dashboard" class="tab">📊 Overview</a>
-    <a href="/customer/transfer" class="tab">💸 Fund Transfer</a>
-    <a href="/customer/transactions" class="tab active">📋 Transactions</a>
-    <a href="/customer/loans" class="tab">🏠 Loans</a>
-    <a href="/customer/profile" class="tab">👤 Profile</a>
-</div>
-
-<div class="main">
-    <h2 class="page-title">📋 Transaction History</h2>
-    <p class="page-sub">View all your past transactions</p>
-
-    <div class="stat-row">
-        <div class="stat-card">
-            <div class="stat-label">💰 Total Credited</div>
-            <div class="stat-value" style="color:#2e7d32" th:text="'+ Rs. ' + ${#numbers.formatDecimal(totalCredited, 1, 2, 'POINT')}">+ Rs. 0.00</div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-label">💸 Total Debited</div>
-            <div class="stat-value" style="color:#c62828" th:text="'- Rs. ' + ${#numbers.formatDecimal(totalDebited, 1, 2, 'POINT')}">- Rs. 0.00</div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-label">📊 Total Transactions</div>
-            <div class="stat-value" th:text="${totalTxCount}">0</div>
+<!-- ══ MAIN CONTENT ══ -->
+<div class="premium-main">
+    <!-- Top Bar -->
+    <div class="premium-topbar">
+        <button class="mobile-menu-btn" onclick="toggleSidebar()">☰</button>
+        <span class="topbar-greeting">Good day, <span th:text="${session.user.name}">User</span> 👋</span>
+        <div class="topbar-actions">
+            <button class="topbar-btn" onclick="toggleDarkMode()" title="Toggle Theme">🌙</button>
+            <span class="topbar-clock" id="clock"></span>
+            <a href="/customer/notifications" class="topbar-btn" title="Notifications">
+                🔔<div class="notification-badge"></div>
+            </a>
         </div>
     </div>
 
-    <form method="get" action="/customer/transactions">
-        <div class="filter-bar">
-            <input type="date" name="from" th:value="${from}" placeholder="From date"/>
-            <input type="date" name="to" th:value="${to}" placeholder="To date"/>
-            <select name="type">
-                <option value="" th:selected="${type == null or type == ''}">All Types</option>
-                <option value="CREDIT" th:selected="${type == 'CREDIT'}">Credit</option>
-                <option value="DEBIT" th:selected="${type == 'DEBIT'}">Debit</option>
-            </select>
-            <button type="submit" class="btn-filter">🔍 Filter</button>
-        </div>
-    </form>
-    <a href="/customer/export-transactions" class="btn-filter">📥 Export CSV</a>
-    <a href="/customer/export-statement" class="btn-filter">📄 Export Statement</a>
-    <div class="card">
-        <div class="card-header">
-            <h3>All Transactions</h3>
-            <span style="font-size:13px;color:#888">Showing latest first</span>
-        </div>
-        <div th:if="${transactions == null or transactions.isEmpty()}">
-            <div class="empty-state">
-                <div>📭</div>
-                <div>No transactions found</div>
+    <!-- Content -->
+    <div class="premium-content">
+        
+        <div class="premium-stats-grid" style="margin-bottom: 24px;">
+            <div class="premium-stat-card">
+                <div class="stat-icon-circle stat-icon-green">💰</div>
+                <div class="stat-info">
+                    <div class="stat-value" style="color:var(--success)" th:text="'+ Rs. ' + ${#numbers.formatDecimal(totalCredited, 1, 2, 'POINT')}">+ Rs. 0.00</div>
+                    <div class="stat-label">Total Credited</div>
+                </div>
+            </div>
+            <div class="premium-stat-card">
+                <div class="stat-icon-circle stat-icon-orange">💸</div>
+                <div class="stat-info">
+                    <div class="stat-value" style="color:var(--danger)" th:text="'- Rs. ' + ${#numbers.formatDecimal(totalDebited, 1, 2, 'POINT')}">- Rs. 0.00</div>
+                    <div class="stat-label">Total Debited</div>
+                </div>
+            </div>
+            <div class="premium-stat-card">
+                <div class="stat-icon-circle stat-icon-blue">📊</div>
+                <div class="stat-info">
+                    <div class="stat-value" th:text="${totalTxCount}">0</div>
+                    <div class="stat-label">Total Transactions</div>
+                </div>
             </div>
         </div>
-        <table th:if="${transactions != null and !transactions.isEmpty()}">
-            <tr>
-                <th>Date & Time</th>
-                <th>Transaction ID</th>
-                <th>Description</th>
-                <th>Type</th>
-                <th>Amount</th>
-                <th>Status</th>
-            </tr>
-            <tr th:each="tx : ${transactions}">
-                <td th:text="${#temporals.format(tx.createdAt, 'dd-MM-yyyy HH:mm')}">—</td>
-                <td th:text="${tx.transactionId}">—</td>
-                <td th:text="${tx.description}">—</td>
-                <td>
-                    <span class="badge" th:classappend="${tx.type == 'CREDIT' ? 'badge-green' : 'badge-red'}" th:text="${tx.type}">—</span>
-                </td>
-                <td th:class="${tx.type == 'CREDIT' ? 'amount-credit' : 'amount-debit'}" 
-                    th:text="${tx.type == 'CREDIT' ? '+ Rs. ' + #numbers.formatDecimal(tx.amount, 1, 2, 'POINT') : '- Rs. ' + #numbers.formatDecimal(tx.amount, 1, 2, 'POINT')}">—</td>
-                <td>
-                    <span class="badge" th:classappend="${tx.status == 'SUCCESS' ? 'badge-green' : (tx.status == 'FAILED' ? 'badge-red' : 'badge-blue')}" th:text="${tx.status != null ? tx.status : 'SUCCESS'}">Success</span>
-                </td>
-            </tr>
-        </table>
+
+        <div class="premium-card" style="margin-bottom: 24px;">
+            <div class="premium-card-header">
+                <h3 class="premium-card-title">🔍 Filter Transactions</h3>
+            </div>
+            <form method="get" action="/customer/transactions" style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+                <input class="premium-input" type="date" name="from" th:value="${from}" placeholder="From date" style="width: auto;"/>
+                <input class="premium-input" type="date" name="to" th:value="${to}" placeholder="To date" style="width: auto;"/>
+                <select class="premium-select" name="type" style="width: auto;">
+                    <option value="" th:selected="${type == null or type == ''}">All Types</option>
+                    <option value="CREDIT" th:selected="${type == 'CREDIT'}">Credit</option>
+                    <option value="DEBIT" th:selected="${type == 'DEBIT'}">Debit</option>
+                </select>
+                <button type="submit" class="premium-btn" style="width: auto; padding: 10px 20px;">🔍 Filter</button>
+                <a href="/customer/export-transactions" class="premium-btn" style="width: auto; padding: 10px 20px; background: transparent; border: 1px solid var(--border); color: var(--text); text-decoration: none;">📥 Export CSV</a>
+                <a href="/customer/export-statement" class="premium-btn" style="width: auto; padding: 10px 20px; background: transparent; border: 1px solid var(--border); color: var(--text); text-decoration: none;">📄 Export Statement</a>
+            </form>
+        </div>
+
+        <div class="premium-card">
+            <div class="premium-card-header">
+                <h3 class="premium-card-title">All Transactions</h3>
+                <span style="font-size:13px;opacity:0.7">Showing latest first</span>
+            </div>
+            
+            <div th:if="${transactions == null or transactions.isEmpty()}">
+                <div class="premium-empty">
+                    <div class="empty-icon">📭</div>
+                    <div>No transactions found</div>
+                </div>
+            </div>
+            <table th:if="${transactions != null and !transactions.isEmpty()}" class="premium-table">
+                <tr>
+                    <th>Date & Time</th>
+                    <th>Transaction ID</th>
+                    <th>Description</th>
+                    <th>Type</th>
+                    <th>Amount</th>
+                    <th>Status</th>
+                </tr>
+                <tr th:each="tx : ${transactions}">
+                    <td th:text="${#temporals.format(tx.createdAt, 'dd-MM-yyyy HH:mm')}">—</td>
+                    <td th:text="${tx.transactionId}">—</td>
+                    <td th:text="${tx.description}">—</td>
+                    <td>
+                        <span class="premium-badge" th:classappend="${tx.type == 'CREDIT' ? 'badge-success' : 'badge-danger'}" th:text="${tx.type}">—</span>
+                    </td>
+                    <td th:style="${tx.type == 'CREDIT' ? 'color: var(--success); font-weight: 700;' : 'color: var(--danger); font-weight: 700;'}" 
+                        th:text="${tx.type == 'CREDIT' ? '+ Rs. ' + #numbers.formatDecimal(tx.amount, 1, 2, 'POINT') : '- Rs. ' + #numbers.formatDecimal(tx.amount, 1, 2, 'POINT')}">—</td>
+                    <td>
+                        <span class="premium-badge" th:classappend="${tx.status == 'SUCCESS' ? 'badge-success' : (tx.status == 'FAILED' ? 'badge-danger' : 'badge-primary')}" th:text="${tx.status != null ? tx.status : 'SUCCESS'}">Success</span>
+                    </td>
+                </tr>
+            </table>
+        </div>
     </div>
 </div>
+
+<script>
+    // Live clock
+    function updateClock() {
+        const el = document.getElementById('clock');
+        if (el) el.textContent = new Date().toLocaleTimeString('en-IN', {hour:'2-digit', minute:'2-digit'});
+    }
+    updateClock(); setInterval(updateClock, 1000);
+
+    // Mobile sidebar toggle
+    function toggleSidebar() {
+        document.getElementById('sidebar').classList.toggle('open');
+        let overlay = document.querySelector('.sidebar-overlay');
+        if (!overlay) {
+            overlay = document.createElement('div');
+            overlay.className = 'sidebar-overlay';
+            overlay.onclick = function() {
+                document.getElementById('sidebar').classList.remove('open');
+                overlay.classList.remove('show');
+            };
+            document.body.appendChild(overlay);
+        }
+        overlay.classList.toggle('show');
+    }
+</script>
 </body>
 </html>
