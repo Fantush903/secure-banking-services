@@ -7,14 +7,14 @@
 // ── Dark Mode System-Preference Aware Initialization ───
 (function() {
     const saved = localStorage.getItem('darkMode');
-    if (saved === 'true' || (saved === null && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-        document.documentElement.setAttribute('data-theme', 'dark');
-    } else {
+    if (saved === 'false' || saved === 'light') {
         document.documentElement.setAttribute('data-theme', 'light');
+    } else {
+        document.documentElement.setAttribute('data-theme', 'dark');
     }
 })();
 
-// Helper to load external scripts dynamically (for WebSockets / STOMP)
+// Helper to load external scripts dynamically (for WebSockets / STOMP / Swup)
 function loadScript(url, callback) {
     if (document.querySelector(`script[src="${url}"]`)) {
         if (callback) callback();
@@ -25,6 +25,15 @@ function loadScript(url, callback) {
     script.onload = callback;
     document.head.appendChild(script);
 }
+
+// Initialize Swup Page Transitions
+loadScript('https://unpkg.com/swup@4', () => {
+    window.swup = new Swup();
+    // Re-initialize any JS that needs to run on every page load
+    window.swup.hooks.on('page:view', () => {
+        if(typeof initInteractions === 'function') initInteractions();
+    });
+});
 
 // ── WebSocket Connection Setup ─────────────────────────
 function initWebSocket(customerId) {
