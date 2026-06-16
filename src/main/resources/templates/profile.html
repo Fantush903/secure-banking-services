@@ -17,7 +17,7 @@
         <span class="logo-text">SecureBank</span>
     </div>
     <div class="sidebar-user-card">
-        <div class="user-avatar" th:text="${session.user.name != null ? session.user.name.substring(0,1) : 'U'}">U</div>
+        <div class="user-avatar" th:text="${session.user.name != null and session.user.name.length() > 0 ? session.user.name.substring(0,1) : 'U'}">U</div>
         <div class="user-name" th:text="${session.user.name}">User</div>
         <div class="user-email" th:text="${session.user.email}">user@email.com</div>
         <span class="user-badge">● ACTIVE</span>
@@ -79,7 +79,7 @@
         <!-- Profile Header -->
         <div class="glass-card premium-card" style="margin-bottom: 24px;">
             <div style="display: flex; align-items: center; gap: 24px;">
-                <div style="width: 80px; height: 80px; background: var(--accent-gradient); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 36px; font-weight: 700; color: white; flex-shrink: 0;" th:text="${session.user.name != null ? session.user.name.substring(0,1) : 'U'}">R</div>
+                <div style="width: 80px; height: 80px; background: var(--accent-gradient); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 36px; font-weight: 700; color: white; flex-shrink: 0;" th:text="${session.user.name != null and session.user.name.length() > 0 ? session.user.name.substring(0,1) : 'U'}">R</div>
                 <div>
                     <h2 style="font-size: 22px; font-weight: 700; margin-bottom: 4px; color: var(--text-white);" th:text="${session.user.name}">Rahul Sharma</h2>
                     <p style="font-size: 13px; color: var(--text-muted);" th:text="${session.user.email}">rahul@example.com</p>

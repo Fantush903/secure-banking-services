@@ -17,7 +17,7 @@
         <span class="logo-text">SecureBank</span>
     </div>
     <div class="sidebar-user-card">
-        <div class="user-avatar" th:text="${session.user.name != null ? session.user.name.substring(0,1) : 'U'}">U</div>
+        <div class="user-avatar" th:text="${session.user.name != null and session.user.name.length() > 0 ? session.user.name.substring(0,1) : 'U'}">U</div>
         <div class="user-name" th:text="${session.user.name}">User</div>
         <div class="user-email" th:text="${session.user.email}">user@email.com</div>
         <span class="user-badge">● ACTIVE</span>
@@ -139,7 +139,7 @@
         <div th:if="${beneficiaries != null and !beneficiaries.isEmpty()}">
             <div class="bene-grid">
                 <div class="bene-card" th:each="b : ${beneficiaries}">
-                    <div class="bene-avatar" th:text="${b.name != null ? b.name.substring(0,1).toUpperCase() : 'B'}">B</div>
+                    <div class="bene-avatar" th:text="${b.name != null and b.name.length() > 0 ? b.name.substring(0,1).toUpperCase() : 'B'}">B</div>
                     <div class="bene-name" th:text="${b.nickname != null ? b.nickname : b.name}">Name</div>
                     <div class="bene-bank" th:text="${b.bankName}">Bank</div>
                     <div class="bene-acc" th:text="'**** **** ' + ${b.accountNo.substring(b.accountNo.length()-4)}">****</div>

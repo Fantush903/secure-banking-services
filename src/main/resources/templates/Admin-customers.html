@@ -63,7 +63,7 @@
                 <tr th:each="c : ${customers}">
                     <td>
                         <div class="user-cell">
-                            <div class="avatar" th:text="${c.name != null ? c.name.substring(0,1) : 'U'}">U</div>
+                            <div class="avatar" th:text="${c.name != null and c.name.length() > 0 ? c.name.substring(0,1) : 'U'}">U</div>
                             <div>
                                 <div style="font-weight:600" th:text="${c.name}">—</div>
                                 <div style="font-size:11px;color:#aaa" th:text="${c.email}">—</div>

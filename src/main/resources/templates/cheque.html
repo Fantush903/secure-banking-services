@@ -17,7 +17,7 @@
         <span class="logo-text">SecureBank</span>
     </div>
     <div class="sidebar-user-card">
-        <div class="user-avatar" th:text="${session.user.name != null ? session.user.name.substring(0,1) : 'U'}">U</div>
+        <div class="user-avatar" th:text="${session.user.name != null and session.user.name.length() > 0 ? session.user.name.substring(0,1) : 'U'}">U</div>
         <div class="user-name" th:text="${session.user.name}">User</div>
         <div class="user-email" th:text="${session.user.email}">user@email.com</div>
         <span class="user-badge">● ACTIVE</span>
