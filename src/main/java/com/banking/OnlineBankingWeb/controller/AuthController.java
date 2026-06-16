@@ -120,18 +120,17 @@ public class AuthController {
 
         System.out.println("=== 2FA OTP for " + email + " : " + otp + " ===");
 
-        boolean emailSent = false;
-        if (emailService != null) {
-            emailSent = emailService.sendOTP(email, otp, "2fa");
-        }
-
+        // Always show OTP on screen instantly (no waiting for email)
+        // Also try sending email in background (async, non-blocking)
         model.addAttribute("email", email);
         model.addAttribute("type", "2fa");
-        if (!emailSent) {
-            model.addAttribute("otpFallback", otp);
-            model.addAttribute("success", "Email delivery unavailable. Your OTP is shown below.");
+        model.addAttribute("otpFallback", otp);
+
+        if (emailService != null && emailService.isMailConfigured()) {
+            emailService.sendOTPAsync(email, otp, "2fa");
+            model.addAttribute("success", "OTP shown below. We're also sending it to your email.");
         } else {
-            model.addAttribute("success", "OTP sent to your email! Check your inbox.");
+            model.addAttribute("success", "Your OTP is shown below.");
         }
         return "verify-otp";
     }
@@ -163,18 +162,15 @@ public class AuthController {
         storeOtpInSession(session, otp);
         System.out.println("=== RESET OTP for " + email + " : " + otp + " ===");
 
-        boolean emailSent = false;
-        if (emailService != null) {
-            emailSent = emailService.sendOTP(email, otp, "reset");
-        }
-
         model.addAttribute("email", email);
         model.addAttribute("type", "reset");
-        if (emailSent) {
-            model.addAttribute("success", "OTP sent to " + email + "! Check your inbox.");
+        model.addAttribute("otpFallback", otp);
+
+        if (emailService != null && emailService.isMailConfigured()) {
+            emailService.sendOTPAsync(email, otp, "reset");
+            model.addAttribute("success", "OTP shown below. We're also sending it to your email.");
         } else {
-            model.addAttribute("otpFallback", otp);
-            model.addAttribute("success", "Email delivery unavailable. Your OTP is shown below.");
+            model.addAttribute("success", "Your OTP is shown below.");
         }
         return "verify-otp";
     }
@@ -233,18 +229,15 @@ public class AuthController {
         storeOtpInSession(session, otp);
         System.out.println("=== RESENT OTP for " + email + " : " + otp + " ===");
 
-        boolean emailSent = false;
-        if (emailService != null && customer != null) {
-            emailSent = emailService.sendOTP(email, otp, type);
-        }
-
         model.addAttribute("email", email);
         model.addAttribute("type", type);
-        if (emailSent) {
-            model.addAttribute("success", "OTP resent successfully! Check your inbox.");
+        model.addAttribute("otpFallback", otp);
+
+        if (emailService != null && emailService.isMailConfigured() && customer != null) {
+            emailService.sendOTPAsync(email, otp, type);
+            model.addAttribute("success", "New OTP shown below. Also sending to your email.");
         } else {
-            model.addAttribute("otpFallback", otp);
-            model.addAttribute("success", "Email delivery unavailable. Your OTP is shown below.");
+            model.addAttribute("success", "Your new OTP is shown below.");
         }
         return "verify-otp";
     }

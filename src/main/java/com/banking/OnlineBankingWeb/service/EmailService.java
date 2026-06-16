@@ -26,6 +26,22 @@ public class EmailService {
         return sendEmail(toEmail, subject, body);
     }
 
+    // ─── Send OTP Email Async (fire-and-forget, won't block login) ──
+    @Async
+    public void sendOTPAsync(String toEmail, String otp, String type) {
+        String subject = type.equals("2fa") ?
+                "SecureBank — Login OTP" : "SecureBank — Password Reset OTP";
+        String body = buildOTPEmail(toEmail, otp, type);
+        boolean sent = sendEmail(toEmail, subject, body);
+        System.out.println(sent ? "✅ Async OTP email sent to " + toEmail : "❌ Async OTP email failed for " + toEmail);
+    }
+
+    // ─── Quick check: is mail configured? ─────────────────────
+    public boolean isMailConfigured() {
+        return mailSender != null && fromEmail != null && !fromEmail.isBlank()
+                && !"noreply@securebank.com".equals(fromEmail);
+    }
+
     // ─── Send Welcome Email ──────────────────────────────────
     @Async
     public void sendWelcome(String toEmail, String name) {
