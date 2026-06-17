@@ -58,16 +58,16 @@ public class Account {
     private double posLimit = 50000.00;
 
     @Column(name = "online_enabled")
-    private boolean onlineEnabled = true;
+    private Boolean onlineEnabled = true;
 
     @Column(name = "intl_enabled")
-    private boolean intlEnabled = false;
+    private Boolean intlEnabled = false;
 
     @Column(name = "contactless_enabled")
-    private boolean contactlessEnabled = true;
+    private Boolean contactlessEnabled = true;
 
     @Column(name = "atm_enabled")
-    private boolean atmEnabled = true;
+    private Boolean atmEnabled = true;
 
     @PrePersist
     public void prePersist() {
@@ -145,17 +145,17 @@ public class Account {
     public double getPosLimit() { return posLimit; }
     public void setPosLimit(double posLimit) { this.posLimit = posLimit; }
 
-    public boolean isOnlineEnabled() { return onlineEnabled; }
-    public void setOnlineEnabled(boolean onlineEnabled) { this.onlineEnabled = onlineEnabled; }
+    public Boolean getOnlineEnabled() { return onlineEnabled; }
+    public void setOnlineEnabled(Boolean onlineEnabled) { this.onlineEnabled = onlineEnabled; }
 
-    public boolean isIntlEnabled() { return intlEnabled; }
-    public void setIntlEnabled(boolean intlEnabled) { this.intlEnabled = intlEnabled; }
+    public Boolean getIntlEnabled() { return intlEnabled; }
+    public void setIntlEnabled(Boolean intlEnabled) { this.intlEnabled = intlEnabled; }
 
-    public boolean isContactlessEnabled() { return contactlessEnabled; }
-    public void setContactlessEnabled(boolean contactlessEnabled) { this.contactlessEnabled = contactlessEnabled; }
+    public Boolean getContactlessEnabled() { return contactlessEnabled; }
+    public void setContactlessEnabled(Boolean contactlessEnabled) { this.contactlessEnabled = contactlessEnabled; }
 
-    public boolean isAtmEnabled() { return atmEnabled; }
-    public void setAtmEnabled(boolean atmEnabled) { this.atmEnabled = atmEnabled; }
+    public Boolean getAtmEnabled() { return atmEnabled; }
+    public void setAtmEnabled(Boolean atmEnabled) { this.atmEnabled = atmEnabled; }
 
     public String getCardPin() { return cardPin; }
     public void setCardPin(String cardPin) { this.cardPin = cardPin; }

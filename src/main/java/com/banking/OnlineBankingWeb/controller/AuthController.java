@@ -120,17 +120,14 @@ public class AuthController {
 
         System.out.println("=== 2FA OTP for " + email + " : " + otp + " ===");
 
-        // Always show OTP on screen instantly (no waiting for email)
-        // Also try sending email in background (async, non-blocking)
         model.addAttribute("email", email);
         model.addAttribute("type", "2fa");
-        model.addAttribute("otpFallback", otp);
 
         if (emailService != null && emailService.isMailConfigured()) {
             emailService.sendOTPAsync(email, otp, "2fa");
-            model.addAttribute("success", "OTP shown below. We're also sending it to your email.");
+            model.addAttribute("success", "OTP has been sent to your registered email address.");
         } else {
-            model.addAttribute("success", "Your OTP is shown below.");
+            model.addAttribute("error", "Email service is not configured. Please contact support.");
         }
         return "verify-otp";
     }
@@ -164,13 +161,12 @@ public class AuthController {
 
         model.addAttribute("email", email);
         model.addAttribute("type", "reset");
-        model.addAttribute("otpFallback", otp);
 
         if (emailService != null && emailService.isMailConfigured()) {
             emailService.sendOTPAsync(email, otp, "reset");
-            model.addAttribute("success", "OTP shown below. We're also sending it to your email.");
+            model.addAttribute("success", "OTP has been sent to your registered email address.");
         } else {
-            model.addAttribute("success", "Your OTP is shown below.");
+            model.addAttribute("error", "Email service is not configured. Please contact support.");
         }
         return "verify-otp";
     }
@@ -231,13 +227,12 @@ public class AuthController {
 
         model.addAttribute("email", email);
         model.addAttribute("type", type);
-        model.addAttribute("otpFallback", otp);
 
         if (emailService != null && emailService.isMailConfigured() && customer != null) {
             emailService.sendOTPAsync(email, otp, type);
-            model.addAttribute("success", "New OTP shown below. Also sending to your email.");
+            model.addAttribute("success", "New OTP has been sent to your registered email address.");
         } else {
-            model.addAttribute("success", "Your new OTP is shown below.");
+            model.addAttribute("error", "Email service is not configured. Please contact support.");
         }
         return "verify-otp";
     }
