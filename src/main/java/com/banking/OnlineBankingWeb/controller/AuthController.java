@@ -3,6 +3,7 @@ package com.banking.OnlineBankingWeb.controller;
 import com.banking.OnlineBankingWeb.model.Customer;
 import com.banking.OnlineBankingWeb.repository.CustomerRepository;
 import com.banking.OnlineBankingWeb.service.EmailService;
+import com.banking.OnlineBankingWeb.service.SmsService;
 import com.banking.OnlineBankingWeb.model.SecurityLog;
 import com.banking.OnlineBankingWeb.repository.SecurityLogRepository;
 import jakarta.servlet.http.HttpServletRequest;
@@ -23,6 +24,7 @@ public class AuthController {
 
     @Autowired private CustomerRepository customerRepository;
     @Autowired(required = false) private EmailService emailService;
+    @Autowired private SmsService smsService;
     @Autowired private PasswordEncoder passwordEncoder;
     @Autowired private SecurityLogRepository securityLogRepository;
 
@@ -123,9 +125,14 @@ public class AuthController {
         model.addAttribute("email", email);
         model.addAttribute("type", "2fa");
 
+        if (customer.getPhone() != null && !customer.getPhone().trim().isEmpty()) {
+            smsService.sendSmsAsync(customer.getPhone(), otp, "2fa");
+            model.addAttribute("phoneExt", customer.getPhone().substring(Math.max(0, customer.getPhone().length() - 4)));
+        }
+
         if (emailService != null && emailService.isMailConfigured()) {
             emailService.sendOTPAsync(email, otp, "2fa");
-            model.addAttribute("success", "OTP has been sent to your registered email address.");
+            model.addAttribute("success", "OTP has been sent to your registered email address and mobile number.");
         } else {
             model.addAttribute("error", "Email service is not configured. Please contact support.");
         }
@@ -162,9 +169,14 @@ public class AuthController {
         model.addAttribute("email", email);
         model.addAttribute("type", "reset");
 
+        if (customer != null && customer.getPhone() != null && !customer.getPhone().trim().isEmpty()) {
+            smsService.sendSmsAsync(customer.getPhone(), otp, "reset");
+            model.addAttribute("phoneExt", customer.getPhone().substring(Math.max(0, customer.getPhone().length() - 4)));
+        }
+
         if (emailService != null && emailService.isMailConfigured()) {
             emailService.sendOTPAsync(email, otp, "reset");
-            model.addAttribute("success", "OTP has been sent to your registered email address.");
+            model.addAttribute("success", "OTP has been sent to your registered email address and mobile number.");
         } else {
             model.addAttribute("error", "Email service is not configured. Please contact support.");
         }
@@ -228,9 +240,14 @@ public class AuthController {
         model.addAttribute("email", email);
         model.addAttribute("type", type);
 
+        if (customer != null && customer.getPhone() != null && !customer.getPhone().trim().isEmpty()) {
+            smsService.sendSmsAsync(customer.getPhone(), otp, type);
+            model.addAttribute("phoneExt", customer.getPhone().substring(Math.max(0, customer.getPhone().length() - 4)));
+        }
+
         if (emailService != null && emailService.isMailConfigured() && customer != null) {
             emailService.sendOTPAsync(email, otp, type);
-            model.addAttribute("success", "New OTP has been sent to your registered email address.");
+            model.addAttribute("success", "New OTP has been sent to your registered email address and mobile number.");
         } else {
             model.addAttribute("error", "Email service is not configured. Please contact support.");
         }

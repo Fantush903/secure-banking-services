@@ -115,7 +115,7 @@ public class CustomerController {
             model.addAttribute("error", "Transaction declined: Debit card is blocked.");
             return "transfer";
         }
-        if (!senderAccount.isOnlineEnabled()) {
+        if (!senderAccount.getOnlineEnabled()) {
             model.addAttribute("error", "Transaction declined: Online transactions are disabled on this card.");
             return "transfer";
         }
@@ -227,7 +227,7 @@ public class CustomerController {
             model.addAttribute("error", "Transaction declined: Debit card is blocked.");
             return "upi";
         }
-        if (!senderAccount.isOnlineEnabled()) {
+        if (!senderAccount.getOnlineEnabled()) {
             model.addAttribute("error", "Transaction declined: Online transactions are disabled on this card.");
             return "upi";
         }
@@ -557,13 +557,13 @@ public class CustomerController {
         Account account = accountRepository.findByCustomerId(u.getCustomerID());
         if (account != null) {
             if ("online".equalsIgnoreCase(feature)) {
-                account.setOnlineEnabled(!account.isOnlineEnabled());
+                account.setOnlineEnabled(!account.getOnlineEnabled());
             } else if ("intl".equalsIgnoreCase(feature)) {
-                account.setIntlEnabled(!account.isIntlEnabled());
+                account.setIntlEnabled(!account.getIntlEnabled());
             } else if ("contactless".equalsIgnoreCase(feature)) {
-                account.setContactlessEnabled(!account.isContactlessEnabled());
+                account.setContactlessEnabled(!account.getContactlessEnabled());
             } else if ("atm".equalsIgnoreCase(feature)) {
-                account.setAtmEnabled(!account.isAtmEnabled());
+                account.setAtmEnabled(!account.getAtmEnabled());
             }
             accountRepository.save(account);
 

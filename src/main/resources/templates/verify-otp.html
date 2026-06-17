@@ -18,19 +18,12 @@
                 <div style="width:72px;height:72px;background:var(--accent-gradient);border-radius:20px;display:flex;align-items:center;justify-content:center;font-size:32px;margin:0 auto 16px;box-shadow:var(--accent-glow);">🔐</div>
                 <h2 style="font-size:24px;font-weight:700;color:var(--text-white);margin-bottom:4px;">Verify Your Identity</h2>
                 <p style="font-size:13px;color:var(--text-muted);">
-                    We sent a 6-digit code to <strong th:text="${email}" style="color:var(--accent-primary);">email@example.com</strong>
+                    We sent a 6-digit code to <strong th:text="${email}" style="color:var(--accent-primary);">email@example.com</strong><span th:if="${phoneExt}"> and your mobile ending in <strong th:text="${phoneExt}" style="color:var(--accent-primary);">****</strong></span>.
                 </p>
             </div>
 
             <div th:if="${error}" class="premium-alert premium-alert-error" th:text="${error}"></div>
             <div th:if="${success}" class="premium-alert premium-alert-success" th:text="${success}"></div>
-
-            <!-- OTP Fallback Display (when email delivery fails) -->
-            <div th:if="${otpFallback}" style="background:linear-gradient(135deg,rgba(99,102,241,0.15),rgba(139,92,246,0.15));border:2px dashed var(--accent-primary);border-radius:16px;padding:24px;margin:16px 0;text-align:center;">
-                <p style="color:var(--text-muted);font-size:12px;margin-bottom:8px;font-weight:600;text-transform:uppercase;letter-spacing:1px;">📩 Your OTP Code</p>
-                <div th:text="${otpFallback}" style="font-size:42px;font-weight:900;color:var(--accent-primary);letter-spacing:12px;font-family:monospace;"></div>
-                <p style="color:var(--text-dim);font-size:11px;margin-top:8px;">⏱ Valid for 5 minutes • Copy this code below</p>
-            </div>
 
             <form method="post" action="/verify-otp" id="otpForm">
                 <input type="hidden" name="email" th:value="${email}"/>
